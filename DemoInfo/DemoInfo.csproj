@@ -67,7 +67,6 @@
         <Compile Include="BitStream\ManagedBitStream.cs" />
         <Compile Include="BitStream\DebugBitStream.cs" />
         <Compile Include="BitStream\IBitStream.cs" />
-        <Compile Include="BitStream\UnsafeBitStream.cs" />
         <Compile Include="Messages\steammessages.cs" />
         <Compile Include="Messages\gcmessages.cs" />
         <Compile Include="DP\FastNetmessages\NETTick.cs" />

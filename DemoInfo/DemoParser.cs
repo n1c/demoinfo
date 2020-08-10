@@ -9,16 +9,16 @@ using System.Linq;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DemoInfo
 {
-#if DEBUG
-#warning The DemoParser is very slow when compiled in Debug-Mode, since we use it as that: We perform many integrity checks during runtime.
-#warning Build this in Relase-Mode for more performance if you're not working the internals of the parser. (If you are, create a pull request when you're done!)
-#endif
-#if SAVE_PROP_VALUES
-#warning You're compiling in the SavePropValues-Mode. This is a mode intended for Debugging and nothing else. It's cool to take a (entity-)dump here to find out how things work, but don't use this in production
-#endif
+    /*
+    #if DEBUG
+    #warning The DemoParser is very slow when compiled in Debug-Mode, since we use it as that: We perform many integrity checks during runtime.
+    #warning Build this in Relase-Mode for more performance if you're not working the internals of the parser. (If you are, create a pull request when you're done!)
+    #endif
+    */
     public class DemoParser : IDisposable
     {
         const int MAX_EDICT_BITS = 11;
@@ -26,7 +26,6 @@ namespace DemoInfo
         internal const int MAX_ENTITIES = ((1 << MAX_EDICT_BITS));
         const int MAXPLAYERS = 64;
         const int MAXWEAPONS = 64;
-
 
         #region Events
         /// <summary>
@@ -289,8 +288,6 @@ namespace DemoInfo
         /// </summary>
         private readonly IBitStream BitStream;
 
-
-
         /// <summary>
         /// A parser for DataTables. This contains the ServerClasses and DataTables.
         /// </summary>
@@ -326,7 +323,7 @@ namespace DemoInfo
 
         /// <summary>
         /// The modelprecache. With this we can tell which model an entity has.
-        /// Useful for finding out whetere a weapon is a P250 or a CZ
+        /// Useful for finding out whether a weapon is a P250 or a CZ
         /// </summary>
         internal List<string> modelprecache = new List<string>();
 
@@ -334,7 +331,6 @@ namespace DemoInfo
         /// The string tables sent by the server.
         /// </summary>
         internal List<CreateStringTable> stringTables = new List<CreateStringTable>();
-
 
         /// <summary>
         /// An map entity <-> weapon. Used to remember whether a weapon is a p250,
@@ -519,50 +515,40 @@ namespace DemoInfo
             }
         }
 
-
-
         /// <summary>
         /// Parses the header (first few hundret bytes) of the demo.
         /// </summary>
         public void ParseHeader()
         {
-            var header = DemoHeader.ParseFrom(BitStream);
+            Header = DemoHeader.ParseFrom(BitStream);
 
-            if (header.Filestamp != "HL2DEMO")
+            if (Header.Filestamp != "HL2DEMO")
                 throw new InvalidDataException("Invalid File-Type - expecting HL2DEMO");
 
-            if (header.GameDirectory != "csgo")
+            if (Header.GameDirectory != "csgo")
                 throw new InvalidDataException("Invalid Demo-Game");
 
-            if (header.Protocol != 4)
+            if (Header.Protocol != 4)
                 throw new InvalidDataException("Invalid Demo-Protocol");
 
-            Header = header;
-
-
-            if (HeaderParsed != null)
-                HeaderParsed(this, new HeaderParsedEventArgs(Header));
-        }
-
-        /// <summary>
-        /// Parses this file until the end of the demo is reached.
-        /// Useful if you have subscribed to events
-        /// </summary>
-        public void ParseToEnd()
-        {
-            ParseToEnd(CancellationToken.None);
+            HeaderParsed?.Invoke(this, new HeaderParsedEventArgs(Header));
         }
 
         /// <summary>
         /// Same as ParseToEnd() but accepts a CancellationToken to be able to cancel parsing
         /// </summary>
         /// <param name="token"></param>
-        public void ParseToEnd(CancellationToken token)
+        public async void ParseToEnd(CancellationToken token)
         {
             while (ParseNextTick())
             {
                 if (token.IsCancellationRequested) return;
+                // @TODO: is this correct usage? Should we Task.Run rather?
+                await Task.Yield();
             }
+
+            // @TODO: Is this a bad assumption?
+            Dispose();
         }
 
         /// <summary>
@@ -581,12 +567,11 @@ namespace DemoInfo
                 if (RawPlayers[i] == null)
                     continue;
 
-                var rawPlayer = RawPlayers[i];
-
+                PlayerInfo rawPlayer = RawPlayers[i];
                 int id = rawPlayer.UserID;
 
                 if (PlayerInformations[i] != null)
-                { //There is an good entity for this
+                {
                     bool newplayer = false;
                     if (!Players.ContainsKey(id))
                     {
@@ -597,7 +582,6 @@ namespace DemoInfo
                     Player p = Players[id];
                     p.Name = rawPlayer.Name;
                     p.SteamID = rawPlayer.XUID;
-
                     p.AdditionaInformations = additionalInformations[p.EntityID];
 
                     if (p.IsAlive)
@@ -607,24 +591,24 @@ namespace DemoInfo
 
                     if (newplayer && p.SteamID != 0)
                     {
-                        PlayerBindEventArgs bind = new PlayerBindEventArgs();
-                        bind.Player = p;
-                        RaisePlayerBind(bind);
+                        RaisePlayerBind(new PlayerBindEventArgs
+                        {
+                            Player = p
+                        });
                     }
                 }
             }
 
             while (GEH_StartBurns.Count > 0)
             {
-                var fireTup = GEH_StartBurns.Dequeue();
+                Tuple<int, FireEventArgs> fireTup = GEH_StartBurns.Dequeue();
                 fireTup.Item2.ThrownBy = InfernoOwners[fireTup.Item1];
                 RaiseFireWithOwnerStart(fireTup.Item2);
             }
 
             if (b)
             {
-                if (TickDone != null)
-                    TickDone(this, new TickDoneEventArgs());
+                TickDone?.Invoke(this, new TickDoneEventArgs());
             }
 
             return b;
@@ -638,10 +622,9 @@ namespace DemoInfo
         {
             DemoCommand command = (DemoCommand)BitStream.ReadByte();
 
-            IngameTick = (int)BitStream.ReadInt(32); // tick number
-            BitStream.ReadByte(); // player slot
-
-            this.CurrentTick++; // = TickNum;
+            IngameTick = (int)BitStream.ReadInt(32); // Tick number
+            BitStream.ReadByte(); // Player slot
+            this.CurrentTick++;
 
             switch (command)
             {
@@ -658,10 +641,10 @@ namespace DemoInfo
                     SendTableParser.ParsePacket(BitStream);
                     BitStream.EndChunk();
 
-                    //Map the weapons in the equipmentMapping-Dictionary.
+                    // Map the weapons in the equipmentMapping-Dictionary.
                     MapEquipment();
 
-                    //And now we have the entities, we can bind events on them.
+                    // And now we have the entities, we can bind events on them.
                     BindEntites();
 
                     break;
@@ -709,15 +692,10 @@ namespace DemoInfo
         /// </summary>
         private void BindEntites()
         {
-            //Okay, first the team-stuff.
             HandleTeamScores();
-
             HandleBombSites();
-
             HandlePlayers();
-
             HandleWeapons();
-
             HandleInfernos();
         }
 
@@ -726,19 +704,18 @@ namespace DemoInfo
             SendTableParser.FindByName("CCSTeam")
                 .OnNewEntity += (object sender, EntityCreatedEventArgs e) =>
                 {
-
                     string team = null;
                     string teamName = null;
                     string teamFlag = null;
                     int teamID = -1;
                     int score = 0;
 
-                    e.Entity.FindProperty("m_scoreTotal").IntRecived += (xx, update) =>
+                    e.Entity.FindProperty("m_scoreTotal").IntRecived += (_, update) =>
                     {
                         score = update.Value;
                     };
 
-                    e.Entity.FindProperty("m_iTeamNum").IntRecived += (xx, update) =>
+                    e.Entity.FindProperty("m_iTeamNum").IntRecived += (_, update) =>
                     {
                         teamID = update.Value;
 
@@ -746,7 +723,7 @@ namespace DemoInfo
                         {
                             this.ctID = teamID;
                             CTScore = score;
-                            foreach (var p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                            foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                                 p.Team = Team.CounterTerrorist;
                         }
 
@@ -754,12 +731,12 @@ namespace DemoInfo
                         {
                             this.tID = teamID;
                             TScore = score;
-                            foreach (var p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                            foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                                 p.Team = Team.Terrorist;
                         }
                     };
 
-                    e.Entity.FindProperty("m_szTeamname").StringRecived += (sender_, recivedTeamName) =>
+                    e.Entity.FindProperty("m_szTeamname").StringRecived += (_, recivedTeamName) =>
                     {
                         team = recivedTeamName.Value;
 
@@ -768,7 +745,7 @@ namespace DemoInfo
                         {
                             CTScore = score;
                             CTClanName = teamName;
-                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (xx, update) =>
+                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (__, update) =>
                             {
                                 CTScore = update.Value;
                             };
@@ -776,7 +753,7 @@ namespace DemoInfo
                             if (teamID != -1)
                             {
                                 this.ctID = teamID;
-                                foreach (var p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                                foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                                     p.Team = Team.CounterTerrorist;
                             }
 
@@ -785,7 +762,7 @@ namespace DemoInfo
                         {
                             TScore = score;
                             TClanName = teamName;
-                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (xx, update) =>
+                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (__, update) =>
                             {
                                 TScore = update.Value;
                             };
@@ -793,13 +770,13 @@ namespace DemoInfo
                             if (teamID != -1)
                             {
                                 this.tID = teamID;
-                                foreach (var p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                                foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                                     p.Team = Team.Terrorist;
                             }
                         }
                     };
 
-                    e.Entity.FindProperty("m_szTeamFlagImage").StringRecived += (sender_, recivedTeamFlag) =>
+                    e.Entity.FindProperty("m_szTeamFlagImage").StringRecived += (_, recivedTeamFlag) =>
                     {
                         teamFlag = recivedTeamFlag.Value;
 
@@ -813,7 +790,7 @@ namespace DemoInfo
                         }
                     };
 
-                    e.Entity.FindProperty("m_szClanTeamname").StringRecived += (sender_, recivedClanName) =>
+                    e.Entity.FindProperty("m_szClanTeamname").StringRecived += (_, recivedClanName) =>
                     {
                         teamName = recivedClanName.Value;
                         if (team == "CT")
@@ -832,7 +809,7 @@ namespace DemoInfo
         {
             SendTableParser.FindByName("CCSPlayer").OnNewEntity += (object sender, EntityCreatedEventArgs e) => HandleNewPlayer(e.Entity);
 
-            SendTableParser.FindByName("CCSPlayerResource").OnNewEntity += (blahblah, playerResources) =>
+            SendTableParser.FindByName("CCSPlayerResource").OnNewEntity += (_, playerResources) =>
             {
                 for (int i = 0; i < 64; i++)
                 {
@@ -865,7 +842,6 @@ namespace DemoInfo
                         additionalInformations[iForTheMethod].Deaths = e.Value;
                     };
 
-
                     playerResources.Entity.FindProperty("m_iAssists." + iString).IntRecived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Assists = e.Value;
@@ -881,7 +857,8 @@ namespace DemoInfo
                         additionalInformations[iForTheMethod].TotalCashSpent = e.Value;
                     };
 
-#if DEBUG
+                    /*
+                    #if DEBUG
                     playerResources.Entity.FindProperty("m_iArmor." + iString).IntRecived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].ScoreboardArmor = e.Value;
@@ -891,8 +868,8 @@ namespace DemoInfo
                     {
                         additionalInformations[iForTheMethod].ScoreboardHP = e.Value;
                     };
-
-#endif
+                    #endif
+                    */
                 }
             };
         }
@@ -933,7 +910,6 @@ namespace DemoInfo
             //problem: Teams are networked after the players... How do we solve that?
             playerEntity.FindProperty("m_iTeamNum").IntRecived += (sender, e) =>
             {
-
                 p.TeamID = e.Value;
 
                 if (e.Value == ctID)
@@ -944,7 +920,6 @@ namespace DemoInfo
                     p.Team = Team.Spectate;
             };
 
-            //update some stats
             playerEntity.FindProperty("m_iHealth").IntRecived += (sender, e) => p.HP = e.Value;
             playerEntity.FindProperty("m_ArmorValue").IntRecived += (sender, e) => p.Armor = e.Value;
             playerEntity.FindProperty("m_bHasDefuser").IntRecived += (sender, e) => p.HasDefuseKit = e.Value == 1;
@@ -955,12 +930,9 @@ namespace DemoInfo
             playerEntity.FindProperty("m_angEyeAngles[0]").FloatRecived += (sender, e) => p.ViewDirectionY = e.Value;
             playerEntity.FindProperty("m_flFlashDuration").FloatRecived += (sender, e) => p.FlashDuration = e.Value;
 
-
             playerEntity.FindProperty("localdata.m_vecVelocity[0]").FloatRecived += (sender, e) => p.Velocity.X = e.Value;
             playerEntity.FindProperty("localdata.m_vecVelocity[1]").FloatRecived += (sender, e) => p.Velocity.Y = e.Value;
             playerEntity.FindProperty("localdata.m_vecVelocity[2]").FloatRecived += (sender, e) => p.Velocity.Z = e.Value;
-
-
 
             playerEntity.FindProperty("m_unCurrentEquipmentValue").IntRecived += (sender, e) => p.CurrentEquipmentValue = e.Value;
             playerEntity.FindProperty("m_unRoundStartEquipmentValue").IntRecived += (sender, e) => p.RoundStartEquipmentValue = e.Value;
@@ -972,27 +944,23 @@ namespace DemoInfo
             if (playerEntity.Props.All(a => a.Entry.PropertyName != "m_hMyWeapons.000"))
                 weaponPrefix = "bcc_nonlocaldata.m_hMyWeapons.";
 
-
             int[] cache = new int[MAXWEAPONS];
-
             for (int i = 0; i < MAXWEAPONS; i++)
             {
-                int iForTheMethod = i; //Because else i is passed as reference to the delegate.
-
+                int iForTheMethod = i; // Otherwise i is passed as reference to the delegate.
                 playerEntity.FindProperty(weaponPrefix + i.ToString().PadLeft(3, '0')).IntRecived += (sender, e) =>
                 {
-
                     int index = e.Value & INDEX_MASK;
 
                     if (index != INDEX_MASK)
                     {
-                        if (cache[iForTheMethod] != 0) //Player already has a weapon in this slot.
+                        if (cache[iForTheMethod] != 0) // Player already has a weapon in this slot.
                         {
                             p.rawWeapons.Remove(cache[iForTheMethod]);
                             cache[iForTheMethod] = 0;
                         }
-                        cache[iForTheMethod] = index;
 
+                        cache[iForTheMethod] = index;
                         AttributeWeapon(index, p);
                     }
                     else
@@ -1001,8 +969,8 @@ namespace DemoInfo
                         {
                             p.rawWeapons[cache[iForTheMethod]].Owner = null;
                         }
-                        p.rawWeapons.Remove(cache[iForTheMethod]);
 
+                        p.rawWeapons.Remove(cache[iForTheMethod]);
                         cache[iForTheMethod] = 0;
                     }
                 };
@@ -1019,41 +987,35 @@ namespace DemoInfo
                     p.AmmoLeft[iForTheMethod] = e.Value;
                 };
             }
-
-
         }
 
         private void MapEquipment()
         {
             for (int i = 0; i < SendTableParser.ServerClasses.Count; i++)
             {
-                var sc = SendTableParser.ServerClasses[i];
+                ServerClass sc = SendTableParser.ServerClasses[i];
 
                 if (sc.BaseClasses.Count > 6 && sc.BaseClasses[6].Name == "CWeaponCSBase")
                 {
-                    //It is a "weapon" (Gun, C4, ... (...is the cz still a "weapon" after the nerf? (fml, it was buffed again)))
+                    //It is a "weapon" (Gun, C4, ...)
                     if (sc.BaseClasses.Count > 7)
                     {
                         if (sc.BaseClasses[7].Name == "CWeaponCSBaseGun")
                         {
-                            //it is a ratatatata-weapon.
-                            var s = sc.DTName.Substring(9).ToLower();
+                            string s = sc.DTName.Substring(9).ToLower();
                             equipmentMapping.Add(sc, Equipment.MapEquipment(s));
                         }
                         else if (sc.BaseClasses[7].Name == "CBaseCSGrenade")
                         {
-                            //"boom"-weapon.
                             equipmentMapping.Add(sc, Equipment.MapEquipment(sc.DTName.Substring(3).ToLower()));
                         }
                     }
                     else if (sc.Name == "CC4")
                     {
-                        //Bomb is neither "ratatata" nor "boom", its "booooooom".
                         equipmentMapping.Add(sc, EquipmentElement.Bomb);
                     }
                     else if (sc.Name == "CKnife" || (sc.BaseClasses.Count > 6 && sc.BaseClasses[6].Name == "CKnife"))
                     {
-                        //tsching weapon
                         equipmentMapping.Add(sc, EquipmentElement.Knife);
                     }
                     else if (sc.Name == "CWeaponNOVA" || sc.Name == "CWeaponSawedoff" || sc.Name == "CWeaponXM1014")
@@ -1062,44 +1024,43 @@ namespace DemoInfo
                     }
                 }
             }
-
         }
 
         private bool AttributeWeapon(int weaponEntityIndex, Player p)
         {
-            var weapon = weapons[weaponEntityIndex];
+            Equipment weapon = weapons[weaponEntityIndex];
             weapon.Owner = p;
             p.rawWeapons[weaponEntityIndex] = weapon;
 
             return true;
         }
 
-        void HandleWeapons()
+        private void HandleWeapons()
         {
             for (int i = 0; i < MAX_ENTITIES; i++)
             {
                 weapons[i] = new Equipment();
             }
 
-            foreach (var s in SendTableParser.ServerClasses.Where(a => a.BaseClasses.Any(c => c.Name == "CWeaponCSBase")))
+            foreach (ServerClass s in SendTableParser.ServerClasses.Where(a => a.BaseClasses.Any(c => c.Name == "CWeaponCSBase")))
             {
                 s.OnNewEntity += HandleWeapon;
             }
         }
 
-        void HandleWeapon(object sender, EntityCreatedEventArgs e)
+        private void HandleWeapon(object sender, EntityCreatedEventArgs e)
         {
-            var equipment = weapons[e.Entity.ID];
+            Equipment equipment = weapons[e.Entity.ID];
             equipment.EntityID = e.Entity.ID;
             equipment.Weapon = equipmentMapping[e.Class];
             equipment.AmmoInMagazine = -1;
 
-            e.Entity.FindProperty("m_iClip1").IntRecived += (asdasd, ammoUpdate) =>
+            e.Entity.FindProperty("m_iClip1").IntRecived += (_, ammoUpdate) =>
             {
-                equipment.AmmoInMagazine = ammoUpdate.Value - 1; //wtf volvo y -1?
+                equipment.AmmoInMagazine = ammoUpdate.Value - 1;
             };
 
-            e.Entity.FindProperty("LocalWeaponData.m_iPrimaryAmmoType").IntRecived += (asdasd, typeUpdate) =>
+            e.Entity.FindProperty("LocalWeaponData.m_iPrimaryAmmoType").IntRecived += (_, typeUpdate) =>
             {
                 equipment.AmmoType = typeUpdate.Value;
             };
@@ -1110,7 +1071,7 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_223"))
-                        equipment.Weapon = EquipmentElement.USP; //BAM
+                        equipment.Weapon = EquipmentElement.USP;
                     else if (modelprecache[e2.Value].Contains("_pist_hkp2000"))
                         equipment.Weapon = EquipmentElement.P2000;
                     else
@@ -1124,8 +1085,8 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_rif_m4a1_s"))
-                        equipment.Weapon = EquipmentElement.M4A1;  //BAM
-                                                                   // if it's not an M4A1-S, check if it's an M4A4
+                        equipment.Weapon = EquipmentElement.M4A1;
+                    // if it's not an M4A1-S, check if it's an M4A4
                     else if (modelprecache[e2.Value].Contains("_rif_m4a1"))
                         equipment.Weapon = EquipmentElement.M4A4;
                     else
@@ -1139,7 +1100,7 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_cz_75"))
-                        equipment.Weapon = EquipmentElement.CZ;  //BAM
+                        equipment.Weapon = EquipmentElement.CZ;
                     else if (modelprecache[e2.Value].Contains("_pist_p250"))
                         equipment.Weapon = EquipmentElement.P250;
                     else
@@ -1153,7 +1114,7 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_deagle"))
-                        equipment.Weapon = EquipmentElement.Deagle; //BAM
+                        equipment.Weapon = EquipmentElement.Deagle;
                     else if (modelprecache[e2.Value].Contains("_pist_revolver"))
                         equipment.Weapon = EquipmentElement.Revolver;
                     else
@@ -1207,13 +1168,12 @@ namespace DemoInfo
                     trigger.Max = vector.Value;
                 };
             };
-
         }
 
         internal Dictionary<int, Player> InfernoOwners = new Dictionary<int, Player>();
         private void HandleInfernos()
         {
-            var inferno = SendTableParser.FindByName("CInferno");
+            ServerClass inferno = SendTableParser.FindByName("CInferno");
 
             inferno.OnNewEntity += (s, infEntity) =>
             {
@@ -1225,297 +1185,200 @@ namespace DemoInfo
                 };
             };
 
-            inferno.OnDestroyEntity += (s, infEntity) =>
-            {
-                InfernoOwners.Remove(infEntity.Entity.ID);
-            };
+            inferno.OnDestroyEntity += (s, infEntity) => InfernoOwners.Remove(infEntity.Entity.ID);
         }
-#if SAVE_PROP_VALUES
-		[Obsolete("This method is only for debugging-purposes and shuld never be used in production, so you need to live with this warning.")]
-		public string DumpAllEntities()
-		{
-			StringBuilder res = new StringBuilder ();
-			for (int i = 0; i < MAX_ENTITIES; i++) {
-				Entity entity = Entities [i];
-
-				if (entity == null)
-					continue;
-
-				res.Append("Entity " + i + ": " + entity.ServerClass.Name + " (inherits: ");
-
-				//The class with the lowest order is the first
-				//But we obv. want the highest order first :D
-				foreach(var c in entity.ServerClass.BaseClasses.Reverse<ServerClass>())
-				{
-					res.Append (c.Name + "; ");
-				}
-				res.AppendLine (")");
-
-				foreach (var prop in entity.Props) {
-					res.Append(prop.Entry.PropertyName.PadLeft(50));
-					res.Append(" = ");
-					res.Append(prop.Value);
-					res.AppendLine ();
-				}
-			}
-
-			return res.ToString();
-		}
-
-		[Obsolete("This method is only for debugging-purposes and shuld never be used in production, so you need to live with this warning.")]
-		public void DumpAllEntities(string fileName)
-		{
-			StreamWriter writer = new StreamWriter(fileName);
-			writer.WriteLine(DumpAllEntities());
-			writer.Flush();
-			writer.Close();
-		}
-#endif
 
         #region EventCaller
 
         internal void RaiseMatchStarted()
         {
-            if (MatchStarted != null)
-                MatchStarted(this, new MatchStartedEventArgs());
+            MatchStarted?.Invoke(this, new MatchStartedEventArgs());
         }
 
         internal void RaiseRoundAnnounceMatchStarted()
         {
-            if (RoundAnnounceMatchStarted != null)
-                RoundAnnounceMatchStarted(this, new RoundAnnounceMatchStartedEventArgs());
+            RoundAnnounceMatchStarted?.Invoke(this, new RoundAnnounceMatchStartedEventArgs());
         }
 
         internal void RaiseWinPanelMatch()
         {
-            if (WinPanelMatch != null)
-                WinPanelMatch(this, new WinPanelMatchEventArgs());
+            WinPanelMatch?.Invoke(this, new WinPanelMatchEventArgs());
         }
 
         internal void RaiseRoundStart(RoundStartedEventArgs rs)
         {
-            if (RoundStart != null)
-                RoundStart(this, rs);
+            RoundStart?.Invoke(this, rs);
         }
 
         internal void RaiseRoundFinal()
         {
-            if (RoundFinal != null)
-                RoundFinal(this, new RoundFinalEventArgs());
+            RoundFinal?.Invoke(this, new RoundFinalEventArgs());
         }
 
         internal void RaiseLastRoundHalf()
         {
-            if (LastRoundHalf != null)
-                LastRoundHalf(this, new LastRoundHalfEventArgs());
+            LastRoundHalf?.Invoke(this, new LastRoundHalfEventArgs());
         }
 
         internal void RaiseRoundEnd(RoundEndedEventArgs re)
         {
-            if (RoundEnd != null)
-                RoundEnd(this, re);
-
+            RoundEnd?.Invoke(this, re);
         }
 
         internal void RaiseRoundOfficiallyEnd()
         {
-            if (RoundOfficiallyEnd != null)
-                RoundOfficiallyEnd(this, new RoundOfficiallyEndedEventArgs());
-
+            RoundOfficiallyEnd?.Invoke(this, new RoundOfficiallyEndedEventArgs());
         }
 
         internal void RaiseRoundMVP(RoundMVPEventArgs re)
         {
-            if (RoundMVP != null)
-                RoundMVP(this, re);
-
+            RoundMVP?.Invoke(this, re);
         }
 
         internal void RaiseFreezetimeEnded()
         {
-            if (FreezetimeEnded != null)
-                FreezetimeEnded(this, new FreezetimeEndedEventArgs());
+            FreezetimeEnded?.Invoke(this, new FreezetimeEndedEventArgs());
         }
 
         internal void RaisePlayerKilled(PlayerKilledEventArgs kill)
         {
-            if (PlayerKilled != null)
-                PlayerKilled(this, kill);
+            PlayerKilled?.Invoke(this, kill);
         }
 
         internal void RaisePlayerHurt(PlayerHurtEventArgs hurt)
         {
-            if (PlayerHurt != null)
-                PlayerHurt(this, hurt);
+            PlayerHurt?.Invoke(this, hurt);
         }
 
         internal void RaiseBlind(BlindEventArgs blind)
         {
-            if (Blind != null)
-                Blind(this, blind);
+            Blind?.Invoke(this, blind);
         }
 
         internal void RaisePlayerBind(PlayerBindEventArgs bind)
         {
-            if (PlayerBind != null)
-                PlayerBind(this, bind);
+            PlayerBind?.Invoke(this, bind);
         }
 
         internal void RaisePlayerDisconnect(PlayerDisconnectEventArgs bind)
         {
-            if (PlayerDisconnect != null)
-                PlayerDisconnect(this, bind);
+            PlayerDisconnect?.Invoke(this, bind);
         }
 
         internal void RaisePlayerTeam(PlayerTeamEventArgs args)
         {
-            if (PlayerTeam != null)
-                PlayerTeam(this, args);
+            PlayerTeam?.Invoke(this, args);
         }
 
         internal void RaiseBotTakeOver(BotTakeOverEventArgs take)
         {
-            if (BotTakeOver != null)
-                BotTakeOver(this, take);
+            BotTakeOver?.Invoke(this, take);
         }
 
         internal void RaiseWeaponFired(WeaponFiredEventArgs fire)
         {
-            if (WeaponFired != null)
-                WeaponFired(this, fire);
+            WeaponFired?.Invoke(this, fire);
         }
-
 
         internal void RaiseSmokeStart(SmokeEventArgs args)
         {
-            if (SmokeNadeStarted != null)
-                SmokeNadeStarted(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            SmokeNadeStarted?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseSmokeEnd(SmokeEventArgs args)
         {
-            if (SmokeNadeEnded != null)
-                SmokeNadeEnded(this, args);
+            SmokeNadeEnded?.Invoke(this, args);
         }
 
         internal void RaiseDecoyStart(DecoyEventArgs args)
         {
-            if (DecoyNadeStarted != null)
-                DecoyNadeStarted(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            DecoyNadeStarted?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseDecoyEnd(DecoyEventArgs args)
         {
-            if (DecoyNadeEnded != null)
-                DecoyNadeEnded(this, args);
+            DecoyNadeEnded?.Invoke(this, args);
         }
 
         internal void RaiseFireStart(FireEventArgs args)
         {
-            if (FireNadeStarted != null)
-                FireNadeStarted(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            FireNadeStarted?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseFireWithOwnerStart(FireEventArgs args)
         {
-            if (FireNadeWithOwnerStarted != null)
-                FireNadeWithOwnerStarted(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            FireNadeWithOwnerStarted?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseFireEnd(FireEventArgs args)
         {
-            if (FireNadeEnded != null)
-                FireNadeEnded(this, args);
+            FireNadeEnded?.Invoke(this, args);
         }
 
         internal void RaiseFlashExploded(FlashEventArgs args)
         {
-            if (FlashNadeExploded != null)
-                FlashNadeExploded(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            FlashNadeExploded?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseGrenadeExploded(GrenadeEventArgs args)
         {
-            if (ExplosiveNadeExploded != null)
-                ExplosiveNadeExploded(this, args);
-
-            if (NadeReachedTarget != null)
-                NadeReachedTarget(this, args);
+            ExplosiveNadeExploded?.Invoke(this, args);
+            NadeReachedTarget?.Invoke(this, args);
         }
 
         internal void RaiseBombBeginPlant(BombEventArgs args)
         {
-            if (BombBeginPlant != null)
-                BombBeginPlant(this, args);
+            BombBeginPlant?.Invoke(this, args);
         }
 
         internal void RaiseBombAbortPlant(BombEventArgs args)
         {
-            if (BombAbortPlant != null)
-                BombAbortPlant(this, args);
+            BombAbortPlant?.Invoke(this, args);
         }
 
         internal void RaiseBombPlanted(BombEventArgs args)
         {
-            if (BombPlanted != null)
-                BombPlanted(this, args);
+            BombPlanted?.Invoke(this, args);
         }
 
         internal void RaiseBombDefused(BombEventArgs args)
         {
-            if (BombDefused != null)
-                BombDefused(this, args);
+            BombDefused?.Invoke(this, args);
         }
 
         internal void RaiseBombExploded(BombEventArgs args)
         {
-            if (BombExploded != null)
-                BombExploded(this, args);
+            BombExploded?.Invoke(this, args);
         }
 
         internal void RaiseBombBeginDefuse(BombDefuseEventArgs args)
         {
-            if (BombBeginDefuse != null)
-                BombBeginDefuse(this, args);
+            BombBeginDefuse?.Invoke(this, args);
         }
 
         internal void RaiseBombAbortDefuse(BombDefuseEventArgs args)
         {
-            if (BombAbortDefuse != null)
-                BombAbortDefuse(this, args);
+            BombAbortDefuse?.Invoke(this, args);
         }
 
         internal void RaiseSayText(SayTextEventArgs args)
         {
-            if (SayText != null)
-                SayText(this, args);
+            SayText?.Invoke(this, args);
         }
 
         internal void RaiseSayText2(SayText2EventArgs args)
         {
-            if (SayText2 != null)
-                SayText2(this, args);
+            SayText2?.Invoke(this, args);
         }
 
         internal void RaiseRankUpdate(RankUpdateEventArgs args)
         {
-            if (RankUpdate != null)
-                RankUpdate(this, args);
+            RankUpdate?.Invoke(this, args);
         }
 
         #endregion
@@ -1533,13 +1396,13 @@ namespace DemoInfo
         {
             BitStream.Dispose();
 
-            foreach (var entity in Entities)
+            foreach (Entity entity in Entities)
             {
                 if (entity != null)
                     entity.Leave();
             }
 
-            foreach (var serverClass in this.SendTableParser.ServerClasses)
+            foreach (ServerClass serverClass in this.SendTableParser.ServerClasses)
             {
                 serverClass.Dispose();
             }
@@ -1570,6 +1433,5 @@ namespace DemoInfo
 
             Players.Clear();
         }
-
     }
 }

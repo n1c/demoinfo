@@ -1,11 +1,6 @@
 ﻿using DemoInfo.DT;
-using DemoInfo.Messages;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 
 namespace DemoInfo.DP.Handler
 {
@@ -92,12 +87,13 @@ namespace DemoInfo.DP.Handler
             //This code below is just faster, since it only parses stuff once
             //which is faster.
 
-            object[] fastBaseline;
-            if (parser.PreprocessedBaselines.TryGetValue(serverClassID, out fastBaseline))
+            if (parser.PreprocessedBaselines.TryGetValue(serverClassID, out object[] fastBaseline))
+            {
                 PropertyEntry.Emit(newEntity, fastBaseline);
+            }
             else
             {
-                var preprocessedBaseline = new List<object>();
+                List<object> preprocessedBaseline = new List<object>();
                 if (parser.instanceBaseline.ContainsKey(serverClassID))
                     using (var collector = new PropertyCollector(newEntity, preprocessedBaseline))
                     using (var bitStream = BitStreamUtil.Create(parser.instanceBaseline[serverClassID]))

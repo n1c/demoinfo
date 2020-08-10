@@ -28,18 +28,18 @@ namespace DemoInfo.DP
         /// <param name="demo">Demo.</param>
         public static void ParsePacket(IBitStream bitstream, DemoParser demo)
         {
-            //As long as there is stuff to read
             while (!bitstream.ChunkFinished)
             {
-                int cmd = bitstream.ReadProtobufVarInt(); //What type of packet is this?
-                int length = bitstream.ReadProtobufVarInt(); //And how long is it?
-                bitstream.BeginChunk(length * 8); //read length bytes
+                int cmd = bitstream.ReadProtobufVarInt(); // What type of packet is this?
+                int length = bitstream.ReadProtobufVarInt(); // And how long is it?
+                bitstream.BeginChunk(length * 8);
+
                 if (cmd == (int)SVC_Messages.svc_PacketEntities)
-                { //Parse packet entities
+                {
                     new PacketEntities().Parse(bitstream, demo);
                 }
                 else if (cmd == (int)SVC_Messages.svc_GameEventList)
-                { //and all this other stuff
+                {
                     new GameEventList().Parse(bitstream, demo);
                 }
                 else if (cmd == (int)SVC_Messages.svc_GameEvent)
@@ -55,7 +55,7 @@ namespace DemoInfo.DP
                     new UpdateStringTable().Parse(bitstream, demo);
                 }
                 else if (cmd == (int)NET_Messages.net_Tick)
-                { //and all this other stuff
+                {
                     new NETTick().Parse(bitstream, demo);
                 }
                 else if (cmd == (int)SVC_Messages.svc_UserMessage)
@@ -91,6 +91,7 @@ namespace DemoInfo.DP
 							break;
 #endif
                 }
+
                 bitstream.EndChunk();
             }
         }

@@ -22,7 +22,7 @@ namespace DemoInfo.DP
             this.ID = id;
             this.ServerClass = serverClass;
 
-            var flattenedProps = ServerClass.FlattenedProps;
+            List<FlattenedPropEntry> flattenedProps = ServerClass.FlattenedProps;
             Props = new PropertyEntry[flattenedProps.Count];
             for (int i = 0; i < flattenedProps.Count; i++)
                 Props[i] = new PropertyEntry(flattenedProps[i], i);
@@ -42,7 +42,6 @@ namespace DemoInfo.DP
             //Okay, how does an entity-update look like?
             //First a list of the updated props is sent
             //And then the props itself are sent.
-
 
             //Read the field-indicies in a "new" way?
             bool newWay = reader.ReadBit();
@@ -70,7 +69,7 @@ namespace DemoInfo.DP
                 }
             }
 
-            int ret = 0;
+            int ret;
             if (bNewWay && reader.ReadBit())
             {
                 ret = (int)reader.ReadInt(3);  // read 3 bits
@@ -104,8 +103,6 @@ namespace DemoInfo.DP
         {
             foreach (var prop in Props)
                 prop.Destroy();
-
-
         }
 
         public override string ToString()
@@ -126,58 +123,6 @@ namespace DemoInfo.DP
         public event EventHandler<PropertyUpdateEventArgs<string>> StringRecived;
         public event EventHandler<PropertyUpdateEventArgs<object[]>> ArrayRecived;
 
-#if SAVE_PROP_VALUES
-		public object Value { get; private set; }
-#endif
-
-        /*
-		 * DON'T USE THIS.
-		 * SERIOUSLY, NO!
-		 * THERE IS ONLY _ONE_ PATTERN WHERE THIS IS OKAY.
-		 *
-		 * SendTableParser.FindByName("CBaseTrigger").OnNewEntity += (s1, newResource) => {
-		 *
-				Dictionary<string, object> values = new Dictionary<string, object>();
-				foreach(var res in newResource.Entity.Props)
-				{
-					res.DataRecived += (sender, e) => values[e.Property.Entry.PropertyName] = e.Value;
-				}
-
-		 *
-		 * The single purpose for this is to see what kind of values an entity has. You can check this faster with this thing.
-		 * Really, ignore it if you don't know what you're doing.
-		 */
-        [Obsolete("Don't use this attribute. It is only avaible for debugging. Bind to the correct event instead."
-#if !DEBUG
-			, true
-#endif
-            )]
-#pragma warning disable 0067 // this is unused in release builds, just as it should be
-        public event EventHandler<PropertyUpdateEventArgs<object>> DataRecivedDontUse;
-#pragma warning restore 0067
-
-        [Conditional("DEBUG")]
-        private void FireDataReceived_DebugEvent(object val, Entity e)
-        {
-#if DEBUG
-#pragma warning disable 0618
-            if (DataRecivedDontUse != null)
-                DataRecivedDontUse(this, new PropertyUpdateEventArgs<object>(val, e, this));
-#pragma warning restore 0618
-#endif
-        }
-
-
-        [Conditional("DEBUG")]
-        private void DeleteDataRecived()
-        {
-#if DEBUG
-#pragma warning disable 0618
-            DataRecivedDontUse = null;
-#pragma warning restore 0618
-#endif
-        }
-
         public void Decode(IBitStream stream, Entity e)
         {
             //I found no better place for this, sorry.
@@ -194,78 +139,49 @@ namespace DemoInfo.DP
             {
                 case SendPropertyType.Int:
                     {
-                        var val = PropDecoder.DecodeInt(Entry.Prop, stream);
-                        if (IntRecived != null)
-                            IntRecived(this, new PropertyUpdateEventArgs<int>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        int val = PropDecoder.DecodeInt(Entry.Prop, stream);
+                        IntRecived?.Invoke(this, new PropertyUpdateEventArgs<int>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Int64:
                     {
-                        var val = PropDecoder.DecodeInt64(Entry.Prop, stream);
-                        if (Int64Received != null)
-                            Int64Received(this, new PropertyUpdateEventArgs<long>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        long val = PropDecoder.DecodeInt64(Entry.Prop, stream);
+                        Int64Received?.Invoke(this, new PropertyUpdateEventArgs<long>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Float:
                     {
-                        var val = PropDecoder.DecodeFloat(Entry.Prop, stream);
-                        if (FloatRecived != null)
-                            FloatRecived(this, new PropertyUpdateEventArgs<float>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        float val = PropDecoder.DecodeFloat(Entry.Prop, stream);
+                        FloatRecived?.Invoke(this, new PropertyUpdateEventArgs<float>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Vector:
                     {
-                        var val = PropDecoder.DecodeVector(Entry.Prop, stream);
-                        if (VectorRecived != null)
-                            VectorRecived(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        Vector val = PropDecoder.DecodeVector(Entry.Prop, stream);
+                        VectorRecived?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Array:
                     {
-                        var val = PropDecoder.DecodeArray(Entry, stream);
-                        if (ArrayRecived != null)
-                            ArrayRecived(this, new PropertyUpdateEventArgs<object[]>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        object[] val = PropDecoder.DecodeArray(Entry, stream);
+                        ArrayRecived?.Invoke(this, new PropertyUpdateEventArgs<object[]>(val, e, this));
                     }
                     break;
                 case SendPropertyType.String:
                     {
-                        var val = PropDecoder.DecodeString(Entry.Prop, stream);
-                        if (StringRecived != null)
-                            StringRecived(this, new PropertyUpdateEventArgs<string>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        string val = PropDecoder.DecodeString(Entry.Prop, stream);
+                        StringRecived?.Invoke(this, new PropertyUpdateEventArgs<string>(val, e, this));
                     }
                     break;
                 case SendPropertyType.VectorXY:
                     {
-                        var val = PropDecoder.DecodeVectorXY(Entry.Prop, stream);
-                        if (VectorRecived != null)
-                            VectorRecived(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
-
-                        SaveValue(val);
-                        FireDataReceived_DebugEvent(val, e);
+                        Vector val = PropDecoder.DecodeVectorXY(Entry.Prop, stream);
+                        VectorRecived?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
                     }
                     break;
                 default:
-                    throw new NotImplementedException("Could not read property. Abort! ABORT! (is it a long?)");
+                    throw new NotImplementedException("Could not read property.");
             }
-
         }
 
         public PropertyEntry(FlattenedPropEntry prop, int index)
@@ -282,16 +198,6 @@ namespace DemoInfo.DP
             this.ArrayRecived = null;
             this.StringRecived = null;
             this.VectorRecived = null;
-
-            DeleteDataRecived();
-        }
-
-        [Conditional("SAVE_PROP_VALUES")]
-        private void SaveValue(object value)
-        {
-#if SAVE_PROP_VALUES
-			this.Value = value;
-#endif
         }
 
         public override string ToString()
@@ -343,59 +249,40 @@ namespace DemoInfo.DP
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Vector));
-
-
         }
 
         public static void Emit(Entity entity, object[] captured)
         {
-            foreach (var arg in captured)
+            foreach (object arg in captured)
             {
-                var intReceived = arg as RecordedPropertyUpdate<int>;
-                var int64Received = arg as RecordedPropertyUpdate<long>;
-                var floatReceived = arg as RecordedPropertyUpdate<float>;
-                var vectorReceived = arg as RecordedPropertyUpdate<Vector>;
-                var stringReceived = arg as RecordedPropertyUpdate<string>;
-                var arrayReceived = arg as RecordedPropertyUpdate<object[]>;
-
-                if (intReceived != null)
+                if (arg is RecordedPropertyUpdate<int> intReceived)
                 {
-                    var e = entity.Props[intReceived.PropIndex].IntRecived;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<int>(intReceived.Value, entity, entity.Props[intReceived.PropIndex]));
+                    entity.Props[intReceived.PropIndex].IntRecived?.Invoke(null, new PropertyUpdateEventArgs<int>(intReceived.Value, entity, entity.Props[intReceived.PropIndex]));
                 }
-                else if (int64Received != null)
+                else if (arg is RecordedPropertyUpdate<long> int64Received)
                 {
-                    var e = entity.Props[int64Received.PropIndex].Int64Received;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<long>(int64Received.Value, entity, entity.Props[int64Received.PropIndex]));
+                    entity.Props[int64Received.PropIndex].Int64Received?.Invoke(null, new PropertyUpdateEventArgs<long>(int64Received.Value, entity, entity.Props[int64Received.PropIndex]));
                 }
-                else if (floatReceived != null)
+                else if (arg is RecordedPropertyUpdate<float> floatReceived)
                 {
-                    var e = entity.Props[floatReceived.PropIndex].FloatRecived;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<float>(floatReceived.Value, entity, entity.Props[floatReceived.PropIndex]));
+                    entity.Props[floatReceived.PropIndex].FloatRecived?.Invoke(null, new PropertyUpdateEventArgs<float>(floatReceived.Value, entity, entity.Props[floatReceived.PropIndex]));
                 }
-                else if (vectorReceived != null)
+                else if (arg is RecordedPropertyUpdate<Vector> vectorReceived)
                 {
-                    var e = entity.Props[vectorReceived.PropIndex].VectorRecived;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<Vector>(vectorReceived.Value, entity, entity.Props[vectorReceived.PropIndex]));
+                    entity.Props[vectorReceived.PropIndex].VectorRecived?.Invoke(null, new PropertyUpdateEventArgs<Vector>(vectorReceived.Value, entity, entity.Props[vectorReceived.PropIndex]));
                 }
-                else if (stringReceived != null)
+                else if (arg is RecordedPropertyUpdate<string> stringReceived)
                 {
-                    var e = entity.Props[stringReceived.PropIndex].StringRecived;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<string>(stringReceived.Value, entity, entity.Props[stringReceived.PropIndex]));
+                    entity.Props[stringReceived.PropIndex].StringRecived?.Invoke(null, new PropertyUpdateEventArgs<string>(stringReceived.Value, entity, entity.Props[stringReceived.PropIndex]));
                 }
-                else if (arrayReceived != null)
+                else if (arg is RecordedPropertyUpdate<object[]> arrayReceived)
                 {
-                    var e = entity.Props[arrayReceived.PropIndex].ArrayRecived;
-                    if (e != null)
-                        e(null, new PropertyUpdateEventArgs<object[]>(arrayReceived.Value, entity, entity.Props[arrayReceived.PropIndex]));
+                    entity.Props[arrayReceived.PropIndex].ArrayRecived?.Invoke(null, new PropertyUpdateEventArgs<object[]>(arrayReceived.Value, entity, entity.Props[arrayReceived.PropIndex]));
                 }
                 else
+                {
                     throw new NotImplementedException();
+                }
             }
         }
     }

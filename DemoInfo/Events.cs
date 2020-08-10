@@ -589,7 +589,7 @@ namespace DemoInfo
     {
         Unknown = 0,
 
-        //Pistoles
+        //Pistols
         P2000 = 1,
         Glock = 2,
         P250 = 3,

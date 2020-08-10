@@ -22,7 +22,8 @@ namespace DemoInfo
         public string Clantag { get; internal set; }
         public int TotalCashSpent { get; internal set; }
 
-#if DEBUG
+        /*
+        #if DEBUG
         //why is this debug? Because it doesn't provie any additional information
         //since we know this about the player
         //but this is *very* important for a unit-test.
@@ -38,7 +39,8 @@ namespace DemoInfo
         /// </summary>
         /// <value>The scoreboard H.</value>
         public int ScoreboardArmor { get; set; }
-#endif
+        #endif
+        */
     }
 
 }
