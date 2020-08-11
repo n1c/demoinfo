@@ -18,9 +18,9 @@ namespace DemoInfo.DP.FastNetmessages
         {
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
 
                 if (wireType == 0 && fieldnum == 1)
                 {
@@ -39,7 +39,9 @@ namespace DemoInfo.DP.FastNetmessages
                     _textAllChat = bitstream.ReadProtobufVarInt();
                 }
                 else
+                {
                     throw new InvalidDataException();
+                }
             }
             Raise(parser);
         }

@@ -5,35 +5,37 @@ namespace DemoInfo
 {
     public struct UpdateStringTable
     {
-        public Int32 TableId;
-        public Int32 NumChangedEntries;
+        public int TableId;
+        public int NumChangedEntries;
 
         public void Parse(IBitStream bitstream, DemoParser parser)
         {
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
 
                 if ((wireType == 2) && (fieldnum == 3))
                 {
-                    // String data is special.
-                    // We'll simply hope that gaben is nice and sends
-                    // string_data last, just like he should.
-                    var len = bitstream.ReadProtobufVarInt();
+                    int len = bitstream.ReadProtobufVarInt();
                     bitstream.BeginChunk(len * 8);
-                    DemoInfo.DP.Handler.UpdateStringTableUserInfoHandler.Apply(this, bitstream, parser);
+                    DP.Handler.UpdateStringTableUserInfoHandler.Apply(this, bitstream, parser);
                     bitstream.EndChunk();
                     if (!bitstream.ChunkFinished)
-                        throw new NotImplementedException("Lord Gaben wasn't nice to us :/");
+                    {
+                        throw new NotImplementedException("Expected bitstream to be finished");
+                    }
+
                     break;
                 }
 
                 if (wireType != 0)
+                {
                     throw new InvalidDataException();
+                }
 
-                var val = bitstream.ReadProtobufVarInt();
+                int val = bitstream.ReadProtobufVarInt();
 
                 switch (fieldnum)
                 {

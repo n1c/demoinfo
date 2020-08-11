@@ -14,7 +14,7 @@ namespace DemoInfo
         /// </summary>
         public static IBitStream Create(Stream stream)
         {
-            var bs = new ManagedBitStream();
+            ManagedBitStream bs = new ManagedBitStream();
             bs.Initialize(stream);
             return bs;
         }
@@ -24,7 +24,7 @@ namespace DemoInfo
         /// </summary>
         public static IBitStream Create(byte[] data)
         {
-            var bs = new ManagedBitStream();
+            ManagedBitStream bs = new ManagedBitStream();
             bs.Initialize(new MemoryStream(data));
             return bs;
         }
@@ -49,17 +49,20 @@ namespace DemoInfo
 
         public static string ReadString(this IBitStream bs)
         {
-            return bs.ReadString(Int32.MaxValue);
+            return bs.ReadString(int.MaxValue);
         }
 
         public static string ReadString(this IBitStream bs, int limit)
         {
-            var result = new List<byte>(512);
+            List<byte> result = new List<byte>(512);
             for (int pos = 0; pos < limit; pos++)
             {
-                var b = bs.ReadByte();
+                byte b = bs.ReadByte();
                 if ((b == 0) || (b == 10))
+                {
                     break;
+                }
+
                 result.Add(b);
             }
             return Encoding.ASCII.GetString(result.ToArray());
@@ -67,11 +70,13 @@ namespace DemoInfo
 
         public static string ReadDataTableString(this IBitStream bs)
         {
-            using (var memstream = new MemoryStream())
+            using (MemoryStream memstream = new MemoryStream())
             {
                 // not particulary efficient, but probably fine
                 for (byte b = bs.ReadByte(); b != 0; b = bs.ReadByte())
+                {
                     memstream.WriteByte(b);
+                }
 
                 return Encoding.Default.GetString(memstream.GetBuffer(), 0, checked((int)memstream.Length));
             }
@@ -89,7 +94,10 @@ namespace DemoInfo
             for (int count = 0; (tmpByte & 0x80) != 0; count++)
             {
                 if (count > 5)
+                {
                     throw new InvalidDataException("VarInt32 out of range");
+                }
+
                 tmpByte = bs.ReadByte();
                 result |= (tmpByte & 0x7F) << (7 * count);
             }
@@ -111,13 +119,20 @@ namespace DemoInfo
                 b = reader.ReadByte();
 
                 if ((count < 4) || ((count == 4) && (((b & 0xF8) == 0) || ((b & 0xF8) == 0xF8))))
+                {
                     result |= (b & ~0x80) << (7 * count);
+                }
                 else
                 {
                     if (count >= 10)
-                        throw new OverflowException("Nope nope nope nope! 10 bytes max!");
+                    {
+                        throw new OverflowException("10 bytes max!");
+                    }
+
                     if ((count == 9) ? (b != 1) : ((b & 0x7F) != 0x7F))
+                    {
                         throw new NotSupportedException("more than 32 bits are not supported");
+                    }
                 }
             }
 

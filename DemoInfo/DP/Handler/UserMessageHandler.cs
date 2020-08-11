@@ -1,7 +1,4 @@
-﻿using System;
-using DemoInfo.Messages;
-
-namespace DemoInfo.DP.Handler
+﻿namespace DemoInfo.DP.Handler
 {
 #if SLOW_PROTOBUF
 	public class UserMessageHandler : IMessageParser

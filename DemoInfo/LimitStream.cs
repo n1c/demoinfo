@@ -5,15 +5,15 @@ namespace DemoInfo
 {
     public class LimitStream : Stream
     {
-        public override bool CanRead { get { return true; } }
-        public override bool CanSeek { get { return false; } }
-        public override bool CanWrite { get { return false; } }
-        public override long Length { get { return _Length; } }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => _Length;
 
         public override long Position
         {
-            get { return _Position; }
-            set { throw new NotImplementedException(); }
+            get => _Position;
+            set => throw new NotImplementedException();
         }
 
         private readonly Stream Underlying;
@@ -23,14 +23,18 @@ namespace DemoInfo
         public LimitStream(Stream underlying, long length)
         {
             if (!underlying.CanRead)
+            {
                 throw new NotImplementedException();
+            }
 
             if (length <= 0)
+            {
                 throw new ArgumentException("length");
+            }
 
-            this.Underlying = underlying;
-            this._Length = length;
-            this._Position = 0;
+            Underlying = underlying;
+            _Length = length;
+            _Position = 0;
         }
 
         private const int TrashSize = 4096;
@@ -42,14 +46,16 @@ namespace DemoInfo
 
             if (disposing)
             {
-                var remaining = Length - _Position;
+                long remaining = Length - _Position;
                 if (Underlying.CanSeek)
-                    Underlying.Seek(remaining, SeekOrigin.Current);
+                {
+                    _ = Underlying.Seek(remaining, SeekOrigin.Current);
+                }
                 else
                 {
                     while (remaining > 0)
                     {
-                        Underlying.Read(Dignitrash, 0, checked((int)Math.Min(TrashSize, remaining)));
+                        _ = Underlying.Read(Dignitrash, 0, checked((int)Math.Min(TrashSize, remaining)));
                         remaining -= TrashSize; // could go beyond 0, but it's signed so who cares
                     }
                 }
@@ -60,13 +66,16 @@ namespace DemoInfo
 
         public byte[] ReadBytes(int count)
         {
-            var data = new byte[count];
+            byte[] data = new byte[count];
             int offset = 0;
             while (offset < count)
             {
                 int thisTime = Read(data, offset, count - offset);
                 if (thisTime == 0)
+                {
                     throw new EndOfStreamException();
+                }
+
                 offset += thisTime;
             }
             return data;

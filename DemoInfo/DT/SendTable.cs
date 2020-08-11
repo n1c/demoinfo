@@ -1,21 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 
 namespace DemoInfo.DT
 {
-    class SendTable
+    internal class SendTable
     {
-        List<SendTableProperty> properties = new List<SendTableProperty>();
-        public List<SendTableProperty> Properties
-        {
-            get { return properties; }
-        }
-
+        public List<SendTableProperty> Properties { get; } = new List<SendTableProperty>();
         public string Name { get; set; }
         public bool IsEnd { get; set; }
 
@@ -23,7 +12,7 @@ namespace DemoInfo.DT
         {
             DemoInfo.SendTable dataTable = new DemoInfo.SendTable();
 
-            foreach (var prop in dataTable.Parse(bitstream))
+            foreach (DemoInfo.SendTable.SendProp prop in dataTable.Parse(bitstream))
             {
                 SendTableProperty property = new SendTableProperty()
                 {
@@ -38,11 +27,11 @@ namespace DemoInfo.DT
                     RawType = prop.Type
                 };
 
-                properties.Add(property);
+                Properties.Add(property);
             }
 
-            this.Name = dataTable.NetTableName;
-            this.IsEnd = dataTable.IsEnd;
+            Name = dataTable.NetTableName;
+            IsEnd = dataTable.IsEnd;
         }
     }
 }

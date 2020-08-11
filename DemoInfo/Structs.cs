@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DemoInfo
 {
@@ -12,30 +8,20 @@ namespace DemoInfo
     /// </summary>
     public class DemoHeader
     {
-        const int MAX_OSPATH = 260;
+        private const int MAX_OSPATH = 260;
 
         public string Filestamp { get; private set; }       // Should be HL2DEMO
         public int Protocol { get; private set; }       // Should be DEMO_PROTOCOL (4)
 
-        [Obsolete("This was a typo. Use NetworkProtocol instead")]
-        public int NetworkProtocal
-        {
-            get
-            {
-                return NetworkProtocol;
-            }
-        }
-
-        public int NetworkProtocol { get; private set; }				// Should be PROTOCOL_VERSION
-
-        public string ServerName { get; private set; }		            // Name of server
-        public string ClientName { get; private set; }		            // Name of client who recorded the game
-        public string MapName { get; private set; }			        // Name of map
-        public string GameDirectory { get; private set; }	            // Name of game directory (com_gamedir)
-        public float PlaybackTime { get; private set; }				// Time of track
-        public int PlaybackTicks { get; private set; }				// # of ticks in track
-        public int PlaybackFrames { get; private set; }			// # of frames in track
-        public int SignonLength { get; private set; }				// length of sigondata in bytes
+        public int NetworkProtocol { get; private set; }  // Should be PROTOCOL_VERSION
+        public string ServerName { get; private set; }    // Name of server
+        public string ClientName { get; private set; }    // Name of client who recorded the game
+        public string MapName { get; private set; }	      // Name of map
+        public string GameDirectory { get; private set; } // Name of game directory (com_gamedir)
+        public float PlaybackTime { get; private set; }	  // Time of track
+        public int PlaybackTicks { get; private set; }    // # of ticks in track
+        public int PlaybackFrames { get; private set; }   // # of frames in track
+        public int SignonLength { get; private set; }     // length of sigondata in bytes
 
         public static DemoHeader ParseFrom(IBitStream reader)
         {
@@ -67,29 +53,11 @@ namespace DemoInfo
         public float Y { get; set; }
         public float Z { get; set; }
 
-        public double Angle2D
-        {
-            get
-            {
-                return Math.Atan2(this.Y, this.X);
-            }
-        }
+        public double Angle2D => Math.Atan2(Y, X);
 
-        public double Absolute
-        {
-            get
-            {
-                return Math.Sqrt(AbsoluteSquared);
-            }
-        }
+        public double Absolute => Math.Sqrt(AbsoluteSquared);
 
-        public double AbsoluteSquared
-        {
-            get
-            {
-                return this.X * this.X + this.Y * this.Y + this.Z * this.Z;
-            }
-        }
+        public double AbsoluteSquared => (X * X) + (Y * Y) + (Z * Z);
 
         public static Vector Parse(IBitStream reader)
         {
@@ -108,9 +76,9 @@ namespace DemoInfo
 
         public Vector(float x, float y, float z)
         {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
         /// <summary>
@@ -141,7 +109,7 @@ namespace DemoInfo
     /// <summary>
     /// And Angle in the Source-Engine. Looks pretty much like a vector.
     /// </summary>
-    class QAngle
+    internal class QAngle
     {
         public float X { get; private set; }
         public float Y { get; private set; }
@@ -162,50 +130,51 @@ namespace DemoInfo
     /// <summary>
     /// A split.
     /// </summary>
-    class Split
+    internal class Split
     {
-        const int FDEMO_NORMAL = 0, FDEMO_USE_ORIGIN2 = 1, FDEMO_USE_ANGLES2 = 2, FDEMO_NOINTERP = 4;
+        // private const int FDEMO_NORMAL = 0;
+        private const int FDEMO_USE_ORIGIN2 = 1;
+        private const int FDEMO_USE_ANGLES2 = 2;
+        // private const int FDEMO_NOINTERP = 4;
 
         public int Flags { get; private set; }
-        public Vector viewOrigin { get; private set; }
-        public QAngle viewAngles { get; private set; }
-        public QAngle localViewAngles { get; private set; }
+        private Vector ReaderViewOrigin { get; set; }
+        private QAngle ReaderViewAngles { get; set; }
+        private QAngle ReaderLocalViewAngles { get; set; }
 
-        public Vector viewOrigin2 { get; private set; }
-        public QAngle viewAngles2 { get; private set; }
-        public QAngle localViewAngles2 { get; private set; }
+        private Vector ReaderViewOrigin2 { get; set; }
+        private QAngle ReaderViewAngles2 { get; set; }
+        private QAngle ReaderLocalViewAngles2 { get; set; }
 
-        public Vector ViewOrigin { get { return (Flags & FDEMO_USE_ORIGIN2) != 0 ? viewOrigin2 : viewOrigin; } }
-
-        public QAngle ViewAngles { get { return (Flags & FDEMO_USE_ANGLES2) != 0 ? viewAngles2 : viewAngles; } }
-
-        public QAngle LocalViewAngles { get { return (Flags & FDEMO_USE_ANGLES2) != 0 ? localViewAngles2 : localViewAngles; } }
+        public Vector ViewOrigin => (Flags & FDEMO_USE_ORIGIN2) != 0 ? ReaderViewOrigin2 : ReaderViewOrigin;
+        public QAngle ViewAngles => (Flags & FDEMO_USE_ANGLES2) != 0 ? ReaderViewAngles2 : ReaderViewAngles;
+        public QAngle LocalViewAngles => (Flags & FDEMO_USE_ANGLES2) != 0 ? ReaderLocalViewAngles2 : ReaderLocalViewAngles;
 
         public static Split Parse(IBitStream reader)
         {
             return new Split
             {
                 Flags = reader.ReadSignedInt(32),
-                viewOrigin = Vector.Parse(reader),
-                viewAngles = QAngle.Parse(reader),
-                localViewAngles = QAngle.Parse(reader),
+                ReaderViewOrigin = Vector.Parse(reader),
+                ReaderViewAngles = QAngle.Parse(reader),
+                ReaderLocalViewAngles = QAngle.Parse(reader),
 
-                viewOrigin2 = Vector.Parse(reader),
-                viewAngles2 = QAngle.Parse(reader),
-                localViewAngles2 = QAngle.Parse(reader),
+                ReaderViewOrigin2 = Vector.Parse(reader),
+                ReaderViewAngles2 = QAngle.Parse(reader),
+                ReaderLocalViewAngles2 = QAngle.Parse(reader),
             };
         }
     }
 
-    class CommandInfo
+    internal class CommandInfo
     {
-        public Split[] u { get; private set; }
+        public Split[] U { get; private set; }
 
         public static CommandInfo Parse(IBitStream reader)
         {
             return new CommandInfo
             {
-                u = new Split[2] { Split.Parse(reader), Split.Parse(reader) }
+                U = new Split[2] { Split.Parse(reader), Split.Parse(reader) }
             };
         }
     }
@@ -215,6 +184,7 @@ namespace DemoInfo
     /// </summary>
     public class PlayerInfo
     {
+
         /// version for future compatibility
         public long Version { get; set; }
 
@@ -242,15 +212,13 @@ namespace DemoInfo
         public bool IsHLTV { get; set; }
 
         // custom files CRC for this player
-        public int customFiles0 { get; set; }
-        public int customFiles1 { get; set; }
-        public int customFiles2 { get; set; }
-        public int customFiles3 { get; set; }
-
-        byte filesDownloaded { get; set; }
+        public int CustomFiles0 { get; set; }
+        public int CustomFiles1 { get; set; }
+        public int CustomFiles2 { get; set; }
+        public int CustomFiles3 { get; set; }
 
         // this counter increases each time the server downloaded a new file
-        byte FilesDownloaded { get; set; }
+        private byte FilesDownloaded { get; set; }
 
         internal PlayerInfo()
         {
@@ -269,12 +237,12 @@ namespace DemoInfo
             IsFakePlayer = reader.ReadBoolean();
             IsHLTV = reader.ReadBoolean();
 
-            customFiles0 = reader.ReadInt32();
-            customFiles1 = reader.ReadInt32();
-            customFiles2 = reader.ReadInt32();
-            customFiles3 = reader.ReadInt32();
+            CustomFiles0 = reader.ReadInt32();
+            CustomFiles1 = reader.ReadInt32();
+            CustomFiles2 = reader.ReadInt32();
+            CustomFiles3 = reader.ReadInt32();
 
-            filesDownloaded = reader.ReadByte();
+            FilesDownloaded = reader.ReadByte();
         }
 
         public static PlayerInfo ParseFrom(BinaryReader reader)
@@ -282,14 +250,14 @@ namespace DemoInfo
             return new PlayerInfo(reader);
         }
 
-        public static int SizeOf { get { return 8 + 8 + 128 + 4 + 3 + 4 + 1 + 1 + 4 * 8 + 1; } }
+        public static int SizeOf => 8 + 8 + 128 + 4 + 3 + 4 + 1 + 1 + (4 * 8) + 1;
     }
 
 
     /// <summary>
     /// This contains information about Collideables (specific edicts), mostly used for bombsites.
     /// </summary>
-    class BoundingBoxInformation
+    internal class BoundingBoxInformation
     {
         public int Index { get; private set; }
         public Vector Min { get; set; }
@@ -297,7 +265,7 @@ namespace DemoInfo
 
         public BoundingBoxInformation(int index)
         {
-            this.Index = index;
+            Index = index;
         }
 
         /// <summary>
@@ -315,22 +283,21 @@ namespace DemoInfo
     /// <summary>
     /// The demo-commands as given by Valve.
     /// </summary>
-    enum DemoCommand
+    internal enum DemoCommand
     {
-
         /// <summary>
         /// it's a startup message, process as fast as possible
         /// </summary>
-	    Signon = 1,
+        Signon = 1,
         /// <summary>
         // it's a normal network packet that we stored off
         /// </summary>
-	    Packet,
+        Packet,
 
         /// <summary>
         /// sync client clock to demo tick
         /// </summary>
-	    Synctick,
+        Synctick,
 
         /// <summary>
         /// Console Command
@@ -340,7 +307,7 @@ namespace DemoInfo
         /// <summary>
         /// user input command
         /// </summary>
-	    UserCommand,
+        UserCommand,
 
         /// <summary>
         ///  network data tables

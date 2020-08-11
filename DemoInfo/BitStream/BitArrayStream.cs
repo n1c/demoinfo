@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Collections;
 using System.IO;
 
@@ -27,7 +25,7 @@ namespace DemoInfo.BitStreamImpl
 
         public void Initialize(Stream stream)
         {
-            using (var memstream = new MemoryStream(checked((int)stream.Length)))
+            using (MemoryStream memstream = new MemoryStream(checked((int)stream.Length)))
             {
                 stream.CopyTo(memstream);
                 array = new BitArray(memstream.GetBuffer());
@@ -39,16 +37,24 @@ namespace DemoInfo.BitStreamImpl
         public void Seek(int pos, SeekOrigin origin)
         {
             if (RemainingInCurrentChunk >= 0)
+            {
                 throw new NotSupportedException("Can't seek while inside a chunk");
+            }
 
             if (origin == SeekOrigin.Begin)
+            {
                 Position = pos;
+            }
 
             if (origin == SeekOrigin.Current)
+            {
                 Position += pos;
+            }
 
             if (origin == SeekOrigin.End)
+            {
                 Position = array.Count - pos;
+            }
         }
 
         public uint ReadInt(int numBits)
@@ -58,12 +64,16 @@ namespace DemoInfo.BitStreamImpl
             if (RemainingInCurrentChunk >= 0)
             {
                 if (numBits > RemainingInCurrentChunk)
+                {
                     throw new OverflowException("Trying to read beyond a chunk boundary!");
+                }
                 else
                 {
                     RemainingInCurrentChunk -= numBits;
                     for (int i = 1; i < RemainingInOldChunks.Count; i++)
+                    {
                         RemainingInOldChunks[i] -= numBits;
+                    }
                 }
             }
 
@@ -77,7 +87,7 @@ namespace DemoInfo.BitStreamImpl
 
             for (int i = 0; i < numBits; i++)
             {
-                result |= ((array[i + Position] ? 1u : 0u) << intPos++);
+                result |= (array[i + Position] ? 1u : 0u) << intPos++;
             }
 
             return result;
@@ -104,7 +114,7 @@ namespace DemoInfo.BitStreamImpl
 
             for (int i = 0; i < length; i++)
             {
-                result[i] = this.ReadByte();
+                result[i] = ReadByte();
             }
 
             return result;
@@ -117,10 +127,7 @@ namespace DemoInfo.BitStreamImpl
             int idx = 0;
             for (int i = Position; i < Math.Min(Position + length, array.Count); i++)
             {
-                if (array[i])
-                    buffer[idx++] = 49;
-                else
-                    buffer[idx++] = 48;
+                buffer[idx++] = array[i] ? (byte)49 : (byte)48;
             }
 
             return Encoding.ASCII.GetString(buffer, 0, Math.Min(length, array.Count - Position));
@@ -147,10 +154,14 @@ namespace DemoInfo.BitStreamImpl
             byte[] result = new byte[(bits + 7) / 8];
 
             for (int i = 0; i < (bits / 8); i++)
-                result[i] = this.ReadByte();
+            {
+                result[i] = ReadByte();
+            }
 
             if ((bits % 8) != 0)
+            {
                 result[bits / 8] = ReadByte(bits % 8);
+            }
 
             return result;
         }
@@ -163,19 +174,22 @@ namespace DemoInfo.BitStreamImpl
         public void BeginChunk(int length)
         {
             if ((RemainingInCurrentChunk >= 0) && (RemainingInCurrentChunk < length))
-                throw new InvalidOperationException("trying to create a too big nested chunk"); // grammar much
+            {
+                throw new InvalidOperationException("Nested Chink length too large");
+            }
+
             RemainingInOldChunks.Add(RemainingInCurrentChunk);
             RemainingInCurrentChunk = length;
         }
 
         public void EndChunk()
         {
-            ReadBits(RemainingInCurrentChunk); // hella inefficient, but this is the BitArrayStream so no one cares
+            _ = ReadBits(RemainingInCurrentChunk);
             int idx = RemainingInOldChunks.Count - 1;
             RemainingInCurrentChunk = RemainingInOldChunks[idx];
             RemainingInOldChunks.RemoveAt(idx);
         }
 
-        public bool ChunkFinished { get { return RemainingInCurrentChunk == 0; } }
+        public bool ChunkFinished => RemainingInCurrentChunk == 0;
     }
 }

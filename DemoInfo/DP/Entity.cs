@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DemoInfo.DP
 {
@@ -19,13 +17,15 @@ namespace DemoInfo.DP
 
         public Entity(int id, ServerClass serverClass)
         {
-            this.ID = id;
-            this.ServerClass = serverClass;
+            ID = id;
+            ServerClass = serverClass;
 
             List<FlattenedPropEntry> flattenedProps = ServerClass.FlattenedProps;
             Props = new PropertyEntry[flattenedProps.Count];
             for (int i = 0; i < flattenedProps.Count; i++)
+            {
                 Props[i] = new PropertyEntry(flattenedProps[i], i);
+            }
         }
 
         public PropertyEntry FindProperty(string name)
@@ -39,27 +39,28 @@ namespace DemoInfo.DP
         /// <param name="reader">Reader.</param>
         public void ApplyUpdate(IBitStream reader)
         {
-            //Okay, how does an entity-update look like?
             //First a list of the updated props is sent
             //And then the props itself are sent.
 
             //Read the field-indicies in a "new" way?
             bool newWay = reader.ReadBit();
             int index = -1;
-            var entries = new List<PropertyEntry>();
+            List<PropertyEntry> entries = new List<PropertyEntry>();
 
             //No read them.
             while ((index = ReadFieldIndex(reader, index, newWay)) != -1)
-                entries.Add(this.Props[index]);
+            {
+                entries.Add(Props[index]);
+            }
 
             //Now read the updated props
-            foreach (var prop in entries)
+            foreach (PropertyEntry prop in entries)
             {
                 prop.Decode(reader, this);
             }
         }
 
-        int ReadFieldIndex(IBitStream reader, int lastIndex, bool bNewWay)
+        private int ReadFieldIndex(IBitStream reader, int lastIndex, bool bNewWay)
         {
             if (bNewWay)
             {
@@ -91,27 +92,24 @@ namespace DemoInfo.DP
                 }
             }
 
-            if (ret == 0xFFF)
-            { // end marker is 4095 for cs:go
-                return -1;
-            }
-
-            return lastIndex + 1 + ret;
+            return ret == 0xFFF ? -1 : lastIndex + 1 + ret;
         }
 
         public void Leave()
         {
-            foreach (var prop in Props)
+            foreach (PropertyEntry prop in Props)
+            {
                 prop.Destroy();
+            }
         }
 
         public override string ToString()
         {
-            return ID + ": " + this.ServerClass;
+            return ID + ": " + ServerClass;
         }
     }
 
-    class PropertyEntry
+    internal class PropertyEntry
     {
         public readonly int Index;
         public FlattenedPropEntry Entry { get; private set; }
@@ -186,18 +184,18 @@ namespace DemoInfo.DP
 
         public PropertyEntry(FlattenedPropEntry prop, int index)
         {
-            this.Entry = new FlattenedPropEntry(prop.PropertyName, prop.Prop, prop.ArrayElementProp);
-            this.Index = index;
+            Entry = new FlattenedPropEntry(prop.PropertyName, prop.Prop, prop.ArrayElementProp);
+            Index = index;
         }
 
         public void Destroy()
         {
-            this.IntRecived = null;
-            this.Int64Received = null;
-            this.FloatRecived = null;
-            this.ArrayRecived = null;
-            this.StringRecived = null;
-            this.VectorRecived = null;
+            IntRecived = null;
+            Int64Received = null;
+            FloatRecived = null;
+            ArrayRecived = null;
+            StringRecived = null;
+            VectorRecived = null;
         }
 
         public override string ToString()
@@ -208,47 +206,61 @@ namespace DemoInfo.DP
         [Conditional("DEBUG")]
         public void CheckBindings(Entity e)
         {
-            if (IntRecived != null && this.Entry.Prop.Type != SendPropertyType.Int)
+            if (IntRecived != null && Entry.Prop.Type != SendPropertyType.Int)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Int));
+            }
 
-            if (Int64Received != null && this.Entry.Prop.Type != SendPropertyType.Int64)
+            if (Int64Received != null && Entry.Prop.Type != SendPropertyType.Int64)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Int64));
+            }
 
-            if (FloatRecived != null && this.Entry.Prop.Type != SendPropertyType.Float)
+            if (FloatRecived != null && Entry.Prop.Type != SendPropertyType.Float)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Float));
+            }
 
-            if (StringRecived != null && this.Entry.Prop.Type != SendPropertyType.String)
+            if (StringRecived != null && Entry.Prop.Type != SendPropertyType.String)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.String));
+            }
 
-            if (ArrayRecived != null && this.Entry.Prop.Type != SendPropertyType.Array)
+            if (ArrayRecived != null && Entry.Prop.Type != SendPropertyType.Array)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Array));
+            }
 
-            if (VectorRecived != null && (this.Entry.Prop.Type != SendPropertyType.Vector && this.Entry.Prop.Type != SendPropertyType.VectorXY))
+            if (VectorRecived != null
+                && Entry.Prop.Type != SendPropertyType.Vector
+                && Entry.Prop.Type != SendPropertyType.VectorXY)
+            {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
                         e.ServerClass.Name,
                         Entry.PropertyName,
                         SendPropertyType.Vector));
+            }
         }
 
         public static void Emit(Entity entity, object[] captured)
@@ -288,7 +300,7 @@ namespace DemoInfo.DP
     }
 
     #region Update-Types
-    class PropertyUpdateEventArgs<T> : EventArgs
+    internal class PropertyUpdateEventArgs<T> : EventArgs
     {
         public T Value { get; private set; }
 
@@ -298,9 +310,9 @@ namespace DemoInfo.DP
 
         public PropertyUpdateEventArgs(T value, Entity e, PropertyEntry p)
         {
-            this.Value = value;
-            this.Entity = e;
-            this.Property = p;
+            Value = value;
+            Entity = e;
+            Property = p;
         }
     }
 

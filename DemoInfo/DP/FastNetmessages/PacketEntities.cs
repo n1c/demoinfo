@@ -5,22 +5,22 @@ namespace DemoInfo
 {
     public struct PacketEntities
     {
-        public Int32 MaxEntries;
-        public Int32 UpdatedEntries;
-        private Int32 _IsDelta;
-        public bool IsDelta { get { return _IsDelta != 0; } }
-        private Int32 _UpdateBaseline;
-        public bool UpdateBaseline { get { return _UpdateBaseline != 0; } }
-        public Int32 Baseline;
-        public Int32 DeltaFrom;
+        public int MaxEntries;
+        public int UpdatedEntries;
+        private int _IsDelta;
+        public bool IsDelta => _IsDelta != 0;
+        private int _UpdateBaseline;
+        public bool UpdateBaseline => _UpdateBaseline != 0;
+        public int Baseline;
+        public int DeltaFrom;
 
         public void Parse(IBitStream bitstream, DemoParser parser)
         {
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
 
                 if ((fieldnum == 7) && (wireType == 2))
                 {
@@ -28,19 +28,24 @@ namespace DemoInfo
                     // We'll simply hope that gaben is nice and sends
                     // entity_data last, just like he should.
 
-                    var len = bitstream.ReadProtobufVarInt();
+                    int len = bitstream.ReadProtobufVarInt();
                     bitstream.BeginChunk(len * 8);
-                    DemoInfo.DP.Handler.PacketEntitesHandler.Apply(this, bitstream, parser);
+                    DP.Handler.PacketEntitesHandler.Apply(this, bitstream, parser);
                     bitstream.EndChunk();
                     if (!bitstream.ChunkFinished)
-                        throw new NotImplementedException("Lord Gaben wasn't nice to us :/");
+                    {
+                        throw new NotImplementedException("Expected Chunk to be finished.");
+                    }
+
                     break;
                 }
 
                 if (wireType != 0)
+                {
                     throw new InvalidDataException();
+                }
 
-                var val = bitstream.ReadProtobufVarInt();
+                int val = bitstream.ReadProtobufVarInt();
 
                 switch (fieldnum)
                 {

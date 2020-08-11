@@ -1,11 +1,6 @@
-﻿using DemoInfo.Messages;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 
 namespace DemoInfo.DP.Handler
 {
@@ -18,7 +13,9 @@ namespace DemoInfo.DP.Handler
         {
             parser.GEH_Descriptors = new Dictionary<int, GameEventList.Descriptor>();
             foreach (GameEventList.Descriptor d in gel)
+            {
                 parser.GEH_Descriptors[d.EventId] = d;
+            }
         }
 
         /// <summary>
@@ -31,13 +28,17 @@ namespace DemoInfo.DP.Handler
             Dictionary<int, GameEventList.Descriptor> descriptors = parser.GEH_Descriptors;
 
             if (descriptors == null)
+            {
                 return;
+            }
 
             Dictionary<string, object> data;
             GameEventList.Descriptor eventDescriptor = descriptors[rawEvent.EventId];
 
             if (parser.Players.Count == 0 && eventDescriptor.Name != "player_connect")
+            {
                 return;
+            }
 
             switch (eventDescriptor.Name)
             {
@@ -70,7 +71,7 @@ namespace DemoInfo.DP.Handler
                     data = MapData(eventDescriptor, rawEvent);
                     parser.RaiseRoundMVP(new RoundMVPEventArgs
                     {
-                        Player = PlayerFromPlayerID(parser, (int)data["userid"]),
+                        Player = parser.PlayerFromPlayerID((int)data["userid"]),
                         Reason = (RoundMVPReason)data["reason"],
                     });
 
@@ -79,7 +80,7 @@ namespace DemoInfo.DP.Handler
                     data = MapData(eventDescriptor, rawEvent);
                     parser.RaiseBotTakeOver(new BotTakeOverEventArgs
                     {
-                        Taker = PlayerFromPlayerID(parser, (int)data["userid"]),
+                        Taker = parser.PlayerFromPlayerID((int)data["userid"]),
                     });
 
                     break;
@@ -156,7 +157,7 @@ namespace DemoInfo.DP.Handler
                     data = MapData(eventDescriptor, rawEvent);
                     parser.RaiseBombBeginDefuse(new BombDefuseEventArgs
                     {
-                        Player = PlayerFromPlayerID(parser, (int)data["userid"]),
+                        Player = parser.PlayerFromPlayerID((int)data["userid"]),
                         HasKit = (bool)data["haskit"],
                     });
                     break;
@@ -175,9 +176,9 @@ namespace DemoInfo.DP.Handler
         private static void HandleBomb(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
         {
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
-            var bombEventArgs = new BombEventArgs
+            BombEventArgs bombEventArgs = new BombEventArgs
             {
-                Player = PlayerFromPlayerID(parser, (int)data["userid"]),
+                Player = parser.PlayerFromPlayerID((int)data["userid"]),
             };
 
             int site = (int)data["site"];
@@ -191,7 +192,7 @@ namespace DemoInfo.DP.Handler
             }
             else
             {
-                var relevantTrigger = parser.triggers.Single(a => a.Index == site);
+                BoundingBoxInformation relevantTrigger = parser.triggers.Single(a => a.Index == site);
                 if (relevantTrigger.Contains(parser.bombsiteACenter))
                 {
                     bombEventArgs.Site = 'A';
@@ -229,7 +230,7 @@ namespace DemoInfo.DP.Handler
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
             PlayerDisconnectEventArgs disconnect = new PlayerDisconnectEventArgs
             {
-                Player = PlayerFromPlayerID(parser, (int)data["userid"]),
+                Player = parser.PlayerFromPlayerID((int)data["userid"]),
             };
 
             parser.RaisePlayerDisconnect(disconnect);
@@ -246,7 +247,7 @@ namespace DemoInfo.DP.Handler
 
             if (parser.Players.ContainsKey(toDelete))
             {
-                parser.Players.Remove(toDelete);
+                _ = parser.Players.Remove(toDelete);
             }
         }
 
@@ -277,7 +278,7 @@ namespace DemoInfo.DP.Handler
                 Armor = (int)data["armor"],
                 HealthDamage = (int)data["dmg_health"],
                 ArmorDamage = (int)data["dmg_armor"],
-                Hitgroup = (Hitgroup)((int)data["hitgroup"]),
+                Hitgroup = (Hitgroup)(int)data["hitgroup"],
                 Weapon = new Equipment((string)data["weapon"], "")
             };
 
@@ -292,7 +293,7 @@ namespace DemoInfo.DP.Handler
         private static void HandleAbortDefuse(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
         {
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
-            Player player = PlayerFromPlayerID(parser, (int)data["userid"]);
+            Player player = parser.PlayerFromPlayerID((int)data["userid"]);
             parser.RaiseBombAbortDefuse(new BombDefuseEventArgs
             {
                 Player = player,
@@ -303,15 +304,18 @@ namespace DemoInfo.DP.Handler
         private static void HandlePlayerBlind(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
         {
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
-            if (!parser.Players.ContainsKey((int)data["userid"])) return;
+            if (!parser.Players.ContainsKey((int)data["userid"]))
+            {
+                return;
+            }
 
-            Player blindPlayer = PlayerFromPlayerID(parser, (int)data["userid"]);
+            Player blindPlayer = parser.PlayerFromPlayerID((int)data["userid"]);
             if (blindPlayer != null && blindPlayer.Team != Team.Spectate)
             {
                 parser.RaiseBlind(new BlindEventArgs
                 {
                     Player = blindPlayer,
-                    Attacker = data.ContainsKey("attacker") ? PlayerFromPlayerID(parser, (int)data["attacker"]) : null,
+                    Attacker = data.ContainsKey("attacker") ? parser.PlayerFromPlayerID((int)data["attacker"]) : null,
                     FlashDuration = data.ContainsKey("blind_duration") ? (float?)data["blind_duration"] : null,
                 });
             }
@@ -322,9 +326,9 @@ namespace DemoInfo.DP.Handler
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
             PlayerKilledEventArgs kill = new PlayerKilledEventArgs
             {
-                Victim = PlayerFromPlayerID(parser, (int)data["userid"]),
-                Killer = PlayerFromPlayerID(parser, (int)data["attacker"]),
-                Assister = PlayerFromPlayerID(parser, (int)data["assister"]),
+                Victim = parser.PlayerFromPlayerID((int)data["userid"]),
+                Killer = parser.PlayerFromPlayerID((int)data["attacker"]),
+                Assister = parser.PlayerFromPlayerID((int)data["assister"]),
                 Headshot = (bool)data["headshot"],
                 Weapon = new Equipment((string)data["weapon"], (string)data["weapon_itemid"]),
                 PenetratedObjects = (int)data["penetrated"],
@@ -332,7 +336,9 @@ namespace DemoInfo.DP.Handler
             };
 
             if (data.ContainsKey("assistedflash"))
+            {
                 kill.AssistedFlash = (bool)data["assistedflash"];
+            }
 
             if (kill.Killer != null
                 && kill.Weapon.Class != EquipmentClass.Grenade
@@ -358,7 +364,7 @@ namespace DemoInfo.DP.Handler
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
             WeaponFiredEventArgs fire = new WeaponFiredEventArgs
             {
-                Shooter = PlayerFromPlayerID(parser, (int)data["userid"]),
+                Shooter = parser.PlayerFromPlayerID((int)data["userid"]),
                 Weapon = new Equipment((string)data["weapon"])
             };
 
@@ -372,38 +378,15 @@ namespace DemoInfo.DP.Handler
             parser.RaiseWeaponFired(fire);
         }
 
-        private static Team TeamFromTeamID(DemoParser parser, int teamID)
-        {
-            Team t = Team.Spectate;
-            if (teamID == parser.tID)
-                t = Team.Terrorist;
-            else if (teamID == parser.ctID)
-                t = Team.CounterTerrorist;
-
-            return t;
-        }
-
-        private static Player PlayerFromPlayerID(DemoParser parser, int playerID)
-        {
-            return parser.Players.ContainsKey(playerID) ? parser.Players[playerID] : null;
-
-            /*
-            Victim = parser.Players.ContainsKey((int)data["userid"]) ? parser.Players[(int)data["userid"]] : null,
-                Killer = parser.Players.ContainsKey((int)data["attacker"]) ? parser.Players[(int)data["attacker"]] : null,
-                Assister = parser.Players.ContainsKey((int)data["assister"]) ? parser.Players[(int)data["assister"]] : null
-            */
-        }
-
-
         private static void HandlePlayerTeam(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
         {
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
 
             PlayerTeamEventArgs playerTeamEvent = new PlayerTeamEventArgs
             {
-                OldTeam = TeamFromTeamID(parser, (int)data["oldteam"]),
-                NewTeam = TeamFromTeamID(parser, (int)data["team"]),
-                Swapped = PlayerFromPlayerID(parser, (int)data["userid"]),
+                OldTeam = parser.TeamFromTeamID((int)data["oldteam"]),
+                NewTeam = parser.TeamFromTeamID((int)data["team"]),
+                Swapped = parser.PlayerFromPlayerID((int)data["userid"]),
                 IsBot = (bool)data["isbot"],
                 Silent = (bool)data["silent"]
             };
@@ -418,7 +401,7 @@ namespace DemoInfo.DP.Handler
             RoundEndedEventArgs roundEnd = new RoundEndedEventArgs()
             {
                 Reason = (RoundEndReason)data["reason"],
-                Winner = TeamFromTeamID(parser, (int)data["winner"]),
+                Winner = parser.TeamFromTeamID((int)data["winner"]),
                 Message = (string)data["message"],
             };
 
@@ -427,10 +410,12 @@ namespace DemoInfo.DP.Handler
 
         private static T FillNadeEvent<T>(Dictionary<string, object> data, DemoParser parser) where T : NadeEventArgs, new()
         {
-            var nade = new T();
+            T nade = new T();
 
             if (data.ContainsKey("userid") && parser.Players.ContainsKey((int)data["userid"]))
+            {
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
+            }
 
             nade.Position = new Vector
             {
@@ -447,7 +432,9 @@ namespace DemoInfo.DP.Handler
             Dictionary<string, object> data = new Dictionary<string, object>();
 
             for (int i = 0; i < eventDescriptor.Keys.Length; i++)
+            {
                 data.Add(eventDescriptor.Keys[i].Name, rawEvent.Keys[i]);
+            }
 
             return data;
         }
@@ -456,7 +443,7 @@ namespace DemoInfo.DP.Handler
         {
             long authServer = Convert.ToInt64(steamID.Substring(8, 1));
             long authID = Convert.ToInt64(steamID.Substring(10));
-            return (76561197960265728 + (authID * 2) + authServer);
+            return 76561197960265728 + (authID * 2) + authServer;
         }
     }
 }

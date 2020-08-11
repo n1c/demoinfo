@@ -1,14 +1,3 @@
-using DemoInfo.DP;
-using DemoInfo.DT;
-using DemoInfo.Messages;
-using DemoInfo.ST;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Diagnostics;
-using System.Text;
-
 namespace DemoInfo
 {
     public class AdditionalPlayerInformation

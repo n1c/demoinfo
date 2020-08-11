@@ -9,8 +9,8 @@ namespace DemoInfo.BitStreamImpl
 
         public DebugBitStream(IBitStream a, IBitStream b)
         {
-            this.A = a;
-            this.B = b;
+            A = a;
+            B = b;
         }
 
         public void Initialize(System.IO.Stream stream)
@@ -29,111 +29,111 @@ namespace DemoInfo.BitStreamImpl
             if (!a.Equals(b))
             {
                 System.Diagnostics.Debug.Assert(false);
-                throw new InvalidOperationException(String.Format("{0} vs {1} ({2} vs {3})",
+                throw new InvalidOperationException(string.Format("{0} vs {1} ({2} vs {3})",
                     a, b, A.GetType().Name, B.GetType().Name));
             }
         }
 
         public uint ReadInt(int bits)
         {
-            var a = A.ReadInt(bits);
-            var b = B.ReadInt(bits);
+            uint a = A.ReadInt(bits);
+            uint b = B.ReadInt(bits);
             Verify(a, b);
             return a;
         }
 
         public int ReadSignedInt(int bits)
         {
-            var a = A.ReadSignedInt(bits);
-            var b = B.ReadSignedInt(bits);
+            int a = A.ReadSignedInt(bits);
+            int b = B.ReadSignedInt(bits);
             Verify(a, b);
             return a;
         }
 
         public bool ReadBit()
         {
-            var a = A.ReadBit();
-            var b = B.ReadBit();
+            bool a = A.ReadBit();
+            bool b = B.ReadBit();
             Verify(a, b);
             return a;
         }
 
         public byte ReadByte()
         {
-            var a = A.ReadByte();
-            var b = B.ReadByte();
+            byte a = A.ReadByte();
+            byte b = B.ReadByte();
             Verify(a, b);
             return a;
         }
 
         public byte ReadByte(int bits)
         {
-            var a = A.ReadByte(bits);
-            var b = B.ReadByte(bits);
+            byte a = A.ReadByte(bits);
+            byte b = B.ReadByte(bits);
             Verify(a, b);
             return a;
         }
 
         public byte[] ReadBytes(int bytes)
         {
-            var a = A.ReadBytes(bytes);
-            var b = B.ReadBytes(bytes);
+            byte[] a = A.ReadBytes(bytes);
+            byte[] b = B.ReadBytes(bytes);
             Verify(a.SequenceEqual(b), true);
             return a;
         }
 
         public string ReadString()
         {
-            var a = A.ReadString();
-            var b = B.ReadString();
+            string a = A.ReadString();
+            string b = B.ReadString();
             Verify(a, b);
             return a;
         }
 
         public string ReadString(int size)
         {
-            var a = A.ReadString(size);
-            var b = B.ReadString(size);
+            string a = A.ReadString(size);
+            string b = B.ReadString(size);
             Verify(a, b);
             return a;
         }
 
         public uint ReadVarInt()
         {
-            var a = A.ReadVarInt();
-            var b = B.ReadVarInt();
+            uint a = A.ReadVarInt();
+            uint b = B.ReadVarInt();
             Verify(a, b);
             return a;
         }
 
         public uint ReadUBitInt()
         {
-            var a = A.ReadUBitInt();
-            var b = B.ReadUBitInt();
+            uint a = A.ReadUBitInt();
+            uint b = B.ReadUBitInt();
             Verify(a, b);
             return a;
         }
 
         public float ReadFloat()
         {
-            var a = A.ReadFloat();
-            var b = B.ReadFloat();
+            float a = A.ReadFloat();
+            float b = B.ReadFloat();
             Verify(a, b);
             return a;
         }
 
         public byte[] ReadBits(int bits)
         {
-            var a = A.ReadBits(bits);
-            var b = B.ReadBits(bits);
+            byte[] a = A.ReadBits(bits);
+            byte[] b = B.ReadBits(bits);
             Verify(a.SequenceEqual(b), true);
             return a;
         }
 
         public int ReadProtobufVarInt()
         {
-            var a = A.ReadProtobufVarInt();
-            var b = B.ReadProtobufVarInt();
+            int a = A.ReadProtobufVarInt();
+            int b = B.ReadProtobufVarInt();
             Verify(a, b);
             return a;
         }
@@ -154,8 +154,8 @@ namespace DemoInfo.BitStreamImpl
         {
             get
             {
-                var a = A.ChunkFinished;
-                var b = B.ChunkFinished;
+                bool a = A.ChunkFinished;
+                bool b = B.ChunkFinished;
                 Verify(a, b);
                 return a;
             }

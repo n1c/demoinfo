@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DemoInfo.Messages
+﻿namespace DemoInfo.Messages
 {
 #if !SLOW_PROTOBUF
     public enum NET_Messages

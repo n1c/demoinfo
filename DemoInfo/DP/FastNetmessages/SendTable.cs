@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace DemoInfo
@@ -8,23 +7,23 @@ namespace DemoInfo
     {
         public struct SendProp
         {
-            public Int32 Type;
+            public int Type;
             public string VarName;
-            public Int32 Flags;
-            public Int32 Priority;
+            public int Flags;
+            public int Priority;
             public string DtName;
-            public Int32 NumElements;
+            public int NumElements;
             public float LowValue;
             public float HighValue;
-            public Int32 NumBits;
+            public int NumBits;
 
             public void Parse(IBitStream bitstream)
             {
                 while (!bitstream.ChunkFinished)
                 {
-                    var desc = bitstream.ReadProtobufVarInt();
-                    var wireType = desc & 7;
-                    var fieldnum = desc >> 3;
+                    int desc = bitstream.ReadProtobufVarInt();
+                    int wireType = desc & 7;
+                    int fieldnum = desc >> 3;
 
                     if (wireType == 2)
                     {
@@ -37,12 +36,13 @@ namespace DemoInfo
                             DtName = bitstream.ReadProtobufString();
                         }
                         else
-                            throw new InvalidDataException("yes I know we should drop this but we" +
-                                "probably want to know that they added a new big field");
+                        {
+                            throw new InvalidDataException();
+                        }
                     }
                     else if (wireType == 0)
                     {
-                        var val = bitstream.ReadProtobufVarInt();
+                        int val = bitstream.ReadProtobufVarInt();
 
                         switch (fieldnum)
                         {
@@ -68,7 +68,7 @@ namespace DemoInfo
                     }
                     else if (wireType == 5)
                     {
-                        var val = bitstream.ReadFloat();
+                        float val = bitstream.ReadFloat();
 
                         switch (fieldnum)
                         {
@@ -84,26 +84,28 @@ namespace DemoInfo
                         }
                     }
                     else
+                    {
                         throw new InvalidDataException();
+                    }
                 }
             }
         }
 
-        private Int32 _IsEnd;
-        public bool IsEnd { get { return _IsEnd != 0; } }
+        private int _IsEnd;
+        public bool IsEnd => _IsEnd != 0;
         public string NetTableName;
-        public Int32 _NeedsDecoder;
-        public bool NeedsDecoder { get { return _NeedsDecoder != 0; } }
+        public int _NeedsDecoder;
+        public bool NeedsDecoder => _NeedsDecoder != 0;
 
         public IEnumerable<SendProp> Parse(IBitStream bitstream)
         {
-            var sendprops = new List<SendProp>();
+            List<SendProp> sendprops = new List<SendProp>();
 
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
 
                 if (wireType == 2)
                 {
@@ -116,20 +118,21 @@ namespace DemoInfo
                         // Props are special.
                         // We'll simply hope that gaben is nice and sends
                         // props last, just like he should.
-                        var len = bitstream.ReadProtobufVarInt();
+                        int len = bitstream.ReadProtobufVarInt();
                         bitstream.BeginChunk(len * 8);
-                        var sendprop = new SendProp();
+                        SendProp sendprop = new SendProp();
                         sendprop.Parse(bitstream);
                         sendprops.Add(sendprop);
                         bitstream.EndChunk();
                     }
                     else
-                        throw new InvalidDataException("yes I know we should drop this" +
-                            "but we probably want to know that they added a new big field");
+                    {
+                        throw new InvalidDataException();
+                    }
                 }
                 else if (wireType == 0)
                 {
-                    var val = bitstream.ReadProtobufVarInt();
+                    int val = bitstream.ReadProtobufVarInt();
 
                     switch (fieldnum)
                     {
@@ -145,7 +148,9 @@ namespace DemoInfo
                     }
                 }
                 else
+                {
                     throw new InvalidDataException();
+                }
             }
 
             return sendprops;

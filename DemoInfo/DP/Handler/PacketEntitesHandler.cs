@@ -30,7 +30,7 @@ namespace DemoInfo.DP.Handler
                     if (reader.ReadBit())
                     {
                         //create it
-                        var e = ReadEnterPVS(reader, currentEntity, parser);
+                        Entity e = ReadEnterPVS(reader, currentEntity, parser);
 
                         parser.Entities[currentEntity] = e;
 
@@ -72,9 +72,7 @@ namespace DemoInfo.DP.Handler
             //So find the correct server class
             ServerClass entityClass = parser.SendTableParser.ServerClasses[serverClassID];
 
-            reader.ReadInt(10); //Entity serial.
-                                //Never used anywhere I guess. Every parser just skips this
-
+            _ = reader.ReadInt(10); //Entity serial.
 
             Entity newEntity = new Entity(id, entityClass);
 
@@ -94,10 +92,16 @@ namespace DemoInfo.DP.Handler
             else
             {
                 List<object> preprocessedBaseline = new List<object>();
+
                 if (parser.instanceBaseline.ContainsKey(serverClassID))
-                    using (var collector = new PropertyCollector(newEntity, preprocessedBaseline))
-                    using (var bitStream = BitStreamUtil.Create(parser.instanceBaseline[serverClassID]))
+                {
+                    // @TODO: I don't understand this first using? Does `collector` get used?
+                    using (PropertyCollector collector = new PropertyCollector(newEntity, preprocessedBaseline))
+                    using (IBitStream bitStream = BitStreamUtil.Create(parser.instanceBaseline[serverClassID]))
+                    {
                         newEntity.ApplyUpdate(bitStream);
+                    }
+                }
 
                 parser.PreprocessedBaselines.Add(serverClassID, preprocessedBaseline.ToArray());
             }
@@ -115,7 +119,7 @@ namespace DemoInfo.DP.Handler
                 Underlying = underlying;
                 Capture = capture;
 
-                foreach (var prop in Underlying.Props)
+                foreach (PropertyEntry prop in Underlying.Props)
                 {
                     switch (prop.Entry.Prop.Type)
                     {
@@ -153,7 +157,7 @@ namespace DemoInfo.DP.Handler
 
             public void Dispose()
             {
-                foreach (var prop in Underlying.Props)
+                foreach (PropertyEntry prop in Underlying.Props)
                 {
                     switch (prop.Entry.Prop.Type)
                     {

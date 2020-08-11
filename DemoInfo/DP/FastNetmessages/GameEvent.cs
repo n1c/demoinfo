@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Collections.Generic;
 using DemoInfo.DP.Handler;
 
@@ -8,7 +7,7 @@ namespace DemoInfo
     public struct GameEvent
     {
         public string EventName;
-        public Int32 EventId;
+        public int EventId;
         public IList<object> Keys;
 
         public void Parse(IBitStream bitstream, DemoParser parser)
@@ -16,9 +15,9 @@ namespace DemoInfo
             Keys = new List<object>();
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
                 if ((wireType == 2) && (fieldnum == 1))
                 {
                     EventName = bitstream.ReadProtobufString();
@@ -38,38 +37,54 @@ namespace DemoInfo
                     wireType = desc & 7;
                     fieldnum = desc >> 3;
                     if ((wireType != 0) || (fieldnum != 1))
-                        throw new InvalidDataException("Lord Gaben wasn't nice to us :/");
+                    {
+                        throw new InvalidDataException("wireType or fieldnum invalid");
+                    }
 
-                    var typeMember = bitstream.ReadProtobufVarInt();
+                    int typeMember = bitstream.ReadProtobufVarInt();
                     desc = bitstream.ReadProtobufVarInt();
                     wireType = desc & 7;
                     fieldnum = desc >> 3;
 
                     if (fieldnum != (typeMember + 1))
-                        throw new InvalidDataException("Lord Gaben wasn't nice to us :/ (srsly wtf!?)");
+                    {
+                        throw new InvalidDataException("fieldnum doesn't match typeMember+1");
+                    }
 
                     switch (typeMember)
                     {
                         case 1: // string
                             if (wireType != 2)
+                            {
                                 throw new InvalidDataException("proto definition differs");
+                            }
+
                             Keys.Add(bitstream.ReadProtobufString());
                             break;
                         case 2: // float
                             if (wireType != 5)
+                            {
                                 throw new InvalidDataException("proto definition differs");
+                            }
+
                             Keys.Add(bitstream.ReadFloat());
                             break;
                         case 3: // long
                         case 4: // short
                         case 5: // byte
                             if (wireType != 0)
+                            {
                                 throw new InvalidDataException("proto definition differs");
+                            }
+
                             Keys.Add(bitstream.ReadProtobufVarInt());
                             break;
                         case 6: // bool
                             if (wireType != 0)
+                            {
                                 throw new InvalidDataException("proto definition differs");
+                            }
+
                             Keys.Add(bitstream.ReadProtobufVarInt() != 0);
                             break;
                         default:
@@ -77,12 +92,16 @@ namespace DemoInfo
                     }
 
                     if (!bitstream.ChunkFinished)
+                    {
                         throw new InvalidDataException("Lord Gaben tricked us! D:");
+                    }
 
                     bitstream.EndChunk();
                 }
                 else
+                {
                     throw new InvalidDataException();
+                }
             }
 
             GameEventHandler.Apply(this, parser);

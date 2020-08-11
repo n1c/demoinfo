@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using DemoInfo.DT;
 using DemoInfo.DP;
 #if SLOW_PROTOBUF
@@ -13,7 +11,7 @@ using ProtoBuf;
 
 namespace DemoInfo
 {
-    static class Helper
+    internal static class Helper
     {
         public static string ReadCString(this BinaryReader reader, int length)
         {
@@ -44,12 +42,16 @@ namespace DemoInfo
 
         public static int ReadVarInt32(this BinaryReader reader)
         {
-            int b = 0, count = 0, result = 0;
+            int count = 0;
+            int result = 0;
+            int b;
 
             do
             {
                 if (count > 5)
+                {
                     throw new InvalidDataException("VarInt32 out of range");
+                }
 
                 b = reader.ReadByte();
 
@@ -71,7 +73,6 @@ namespace DemoInfo
             return ReadNullTerminatedString(reader, encoding, 512);
         }
 
-
         public static string ReadNullTerminatedString(this BinaryReader reader, Encoding encoding, int initialBufferSize)
         {
             List<byte> result = new List<byte>(initialBufferSize);
@@ -81,7 +82,9 @@ namespace DemoInfo
                 byte b = reader.ReadByte();
 
                 if (b == 0)
+                {
                     break;
+                }
 
                 result.Add(b);
             }
@@ -128,8 +131,7 @@ namespace DemoInfo
 
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
         {
-            TValue value;
-            return dictionary.TryGetValue(key, out value) ? value : defaultValue;
+            return dictionary.TryGetValue(key, out TValue value) ? value : defaultValue;
         }
 
         public static bool HasFlagFast(this SendPropertyFlags flags, SendPropertyFlags check)

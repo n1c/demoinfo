@@ -1,14 +1,10 @@
-﻿using DemoInfo.Messages;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DemoInfo.DP;
 
 namespace DemoInfo.DT
 {
-    class ServerClass : IDisposable
+    internal class ServerClass : IDisposable
     {
         public int ClassID;
         public int DataTableID;
@@ -18,21 +14,18 @@ namespace DemoInfo.DT
         public List<FlattenedPropEntry> FlattenedProps = new List<FlattenedPropEntry>();
         public List<ServerClass> BaseClasses = new List<ServerClass>();
 
-
         public event EventHandler<EntityCreatedEventArgs> OnNewEntity;
 
         internal void AnnounceNewEntity(Entity e)
         {
-            if (OnNewEntity != null)
-                OnNewEntity(this, new EntityCreatedEventArgs(this, e));
+            OnNewEntity?.Invoke(this, new EntityCreatedEventArgs(this, e));
         }
 
         public event EventHandler<EntityDestroyedEventArgs> OnDestroyEntity;
 
         internal void AnnounceDestroyedEntity(Entity e)
         {
-            if (OnDestroyEntity != null)
-                OnDestroyEntity(this, new EntityDestroyedEventArgs(this, e));
+            OnDestroyEntity?.Invoke(this, new EntityDestroyedEventArgs(this, e));
         }
 
         public override string ToString()
@@ -40,11 +33,10 @@ namespace DemoInfo.DT
             return Name + " | " + DTName;
         }
 
-
         public void Dispose()
         {
-            this.OnNewEntity = null;
-            this.OnDestroyEntity = null;
+            OnNewEntity = null;
+            OnDestroyEntity = null;
         }
     }
 
@@ -56,19 +48,18 @@ namespace DemoInfo.DT
 
         public FlattenedPropEntry(string propertyName, SendTableProperty prop, SendTableProperty arrayElementProp)
         {
-            this.Prop = prop;
-            this.ArrayElementProp = arrayElementProp;
-            this.PropertyName = propertyName;
+            Prop = prop;
+            ArrayElementProp = arrayElementProp;
+            PropertyName = propertyName;
         }
 
         public override string ToString()
         {
             return string.Format("[FlattenedPropEntry: PropertyName={2}, Prop={0}, ArrayElementProp={1}]", Prop, ArrayElementProp, PropertyName);
         }
-
     };
 
-    class ExcludeEntry
+    internal class ExcludeEntry
     {
         public ExcludeEntry(string varName, string dtName, string excludingDT)
         {
@@ -82,20 +73,19 @@ namespace DemoInfo.DT
         public string ExcludingDT { get; private set; }
     }
 
-
-    class EntityCreatedEventArgs : EventArgs
+    internal class EntityCreatedEventArgs : EventArgs
     {
         public ServerClass Class { get; private set; }
         public Entity Entity { get; private set; }
 
         public EntityCreatedEventArgs(ServerClass c, Entity e)
         {
-            this.Class = c;
-            this.Entity = e;
+            Class = c;
+            Entity = e;
         }
     }
 
-    class EntityDestroyedEventArgs : EntityCreatedEventArgs
+    internal class EntityDestroyedEventArgs : EntityCreatedEventArgs
     {
         public EntityDestroyedEventArgs(ServerClass c, Entity e) : base(c, e)
         {

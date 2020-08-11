@@ -1,13 +1,10 @@
 ﻿using DemoInfo.DP;
 using DemoInfo.DT;
-using DemoInfo.Messages;
 using DemoInfo.ST;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,11 +18,11 @@ namespace DemoInfo
     */
     public class DemoParser : IDisposable
     {
-        const int MAX_EDICT_BITS = 11;
-        internal const int INDEX_MASK = ((1 << MAX_EDICT_BITS) - 1);
-        internal const int MAX_ENTITIES = ((1 << MAX_EDICT_BITS));
-        const int MAXPLAYERS = 64;
-        const int MAXWEAPONS = 64;
+        private const int MAX_EDICT_BITS = 11;
+        internal const int INDEX_MASK = (1 << MAX_EDICT_BITS) - 1;
+        internal const int MAX_ENTITIES = 1 << MAX_EDICT_BITS;
+        private const int MAXPLAYERS = 64;
+        private const int MAXWEAPONS = 64;
 
         #region Events
         /// <summary>
@@ -248,10 +245,7 @@ namespace DemoInfo
         /// Is a string like "de_dust2".
         /// </summary>
         /// <value>The map.</value>
-        public string Map
-        {
-            get { return Header.MapName; }
-        }
+        public string Map => Header.MapName;
 
         /// <summary>
         /// The header of the demo, containing some useful information.
@@ -263,25 +257,13 @@ namespace DemoInfo
         /// Gets the participants of this game
         /// </summary>
         /// <value>The participants.</value>
-        public IEnumerable<Player> Participants
-        {
-            get
-            {
-                return Players.Values;
-            }
-        }
+        public IEnumerable<Player> Participants => Players.Values;
 
         /// <summary>
         /// Gets all the participants of this game, that aren't spectating.
         /// </summary>
         /// <value>The playing participants.</value>
-        public IEnumerable<Player> PlayingParticipants
-        {
-            get
-            {
-                return Players.Values.Where(a => a.Team != Team.Spectate);
-            }
-        }
+        public IEnumerable<Player> PlayingParticipants => Players.Values.Where(a => a.Team != Team.Spectate);
 
         /// <summary>
         /// The stream of the demo - all the information go here
@@ -296,7 +278,7 @@ namespace DemoInfo
         /// <summary>
         /// A parser for DEM_STRINGTABLES-Packets
         /// </summary>
-        StringTableParser StringTables = new StringTableParser();
+        private readonly StringTableParser StringTables = new StringTableParser();
 
         /// <summary>
         /// This maps an ServerClass to an Equipment.
@@ -336,7 +318,7 @@ namespace DemoInfo
         /// An map entity <-> weapon. Used to remember whether a weapon is a p250,
         /// how much ammonition it has, etc.
         /// </summary>
-        Equipment[] weapons = new Equipment[MAX_ENTITIES];
+        private Equipment[] weapons = new Equipment[MAX_ENTITIES];
 
         /// <summary>
         /// The indicies of the bombsites - useful to find out
@@ -452,28 +434,19 @@ namespace DemoInfo
         /// The tickrate *of the demo* (16 for normal GOTV-demos)
         /// </summary>
         /// <value>The tick rate.</value>
-        public float TickRate
-        {
-            get { return this.Header.PlaybackFrames / this.Header.PlaybackTime; }
-        }
+        public float TickRate => Header.PlaybackFrames / Header.PlaybackTime;
 
         /// <summary>
         /// How long a tick of the demo is in s^-1
         /// </summary>
         /// <value>The tick time.</value>
-        public float TickTime
-        {
-            get { return this.Header.PlaybackTime / this.Header.PlaybackFrames; }
-        }
+        public float TickTime => Header.PlaybackTime / Header.PlaybackFrames;
 
         /// <summary>
         /// Gets the parsing progess. 0 = beginning, ~1 = finished (it can actually be > 1, so be careful!)
         /// </summary>
         /// <value>The parsing progess.</value>
-        public float ParsingProgess
-        {
-            get { return (CurrentTick / (float)Header.PlaybackFrames); }
-        }
+        public float ParsingProgess => CurrentTick / (float)Header.PlaybackFrames;
 
         /// <summary>
         /// The current tick the parser has seen. So if it's a 16-tick demo,
@@ -492,7 +465,7 @@ namespace DemoInfo
         /// How far we've advanced in the demo in seconds.
         /// </summary>
         /// <value>The current time.</value>
-        public float CurrentTime { get { return CurrentTick * TickTime; } }
+        public float CurrentTime => CurrentTick * TickTime;
 
         /// <summary>
         /// This contains additional informations about each player, such as Kills, Deaths, etc.
@@ -523,13 +496,19 @@ namespace DemoInfo
             Header = DemoHeader.ParseFrom(BitStream);
 
             if (Header.Filestamp != "HL2DEMO")
+            {
                 throw new InvalidDataException("Invalid File-Type - expecting HL2DEMO");
+            }
 
             if (Header.GameDirectory != "csgo")
+            {
                 throw new InvalidDataException("Invalid Demo-Game");
+            }
 
             if (Header.Protocol != 4)
+            {
                 throw new InvalidDataException("Invalid Demo-Protocol");
+            }
 
             HeaderParsed?.Invoke(this, new HeaderParsedEventArgs(Header));
         }
@@ -542,7 +521,11 @@ namespace DemoInfo
         {
             while (ParseNextTick())
             {
-                if (token.IsCancellationRequested) return;
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 // @TODO: is this correct usage? Should we Task.Run rather?
                 await Task.Yield();
             }
@@ -558,14 +541,19 @@ namespace DemoInfo
         public bool ParseNextTick()
         {
             if (Header == null)
+            {
                 throw new InvalidOperationException("You need to call ParseHeader first before you call ParseToEnd or ParseNextTick!");
+            }
+
 
             bool b = ParseTick();
 
             for (int i = 0; i < RawPlayers.Length; i++)
             {
                 if (RawPlayers[i] == null)
+                {
                     continue;
+                }
 
                 PlayerInfo rawPlayer = RawPlayers[i];
                 int id = rawPlayer.UserID;
@@ -623,8 +611,8 @@ namespace DemoInfo
             DemoCommand command = (DemoCommand)BitStream.ReadByte();
 
             IngameTick = (int)BitStream.ReadInt(32); // Tick number
-            BitStream.ReadByte(); // Player slot
-            this.CurrentTick++;
+            _ = BitStream.ReadByte(); // Player slot
+            CurrentTick++;
 
             switch (command)
             {
@@ -654,7 +642,7 @@ namespace DemoInfo
                     BitStream.EndChunk();
                     break;
                 case DemoCommand.UserCommand:
-                    BitStream.ReadInt(32);
+                    _ = BitStream.ReadInt(32);
                     BitStream.BeginChunk(BitStream.ReadSignedInt(32) * 8);
                     BitStream.EndChunk();
                     break;
@@ -675,9 +663,9 @@ namespace DemoInfo
         private void ParseDemoPacket()
         {
             //Read a command-info. Contains no really useful information afaik.
-            CommandInfo.Parse(BitStream);
-            BitStream.ReadInt(32); // SeqNrIn
-            BitStream.ReadInt(32); // SeqNrOut
+            _ = CommandInfo.Parse(BitStream);
+            _ = BitStream.ReadInt(32); // SeqNrIn
+            _ = BitStream.ReadInt(32); // SeqNrOut
 
             BitStream.BeginChunk(BitStream.ReadSignedInt(32) * 8);
             DemoPacketParser.ParsePacket(BitStream, this);
@@ -721,18 +709,22 @@ namespace DemoInfo
 
                         if (team == "CT")
                         {
-                            this.ctID = teamID;
+                            ctID = teamID;
                             CTScore = score;
                             foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                            {
                                 p.Team = Team.CounterTerrorist;
+                            }
                         }
 
                         if (team == "TERRORIST")
                         {
-                            this.tID = teamID;
+                            tID = teamID;
                             TScore = score;
                             foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                            {
                                 p.Team = Team.Terrorist;
+                            }
                         }
                     };
 
@@ -752,9 +744,11 @@ namespace DemoInfo
 
                             if (teamID != -1)
                             {
-                                this.ctID = teamID;
+                                ctID = teamID;
                                 foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                                {
                                     p.Team = Team.CounterTerrorist;
+                                }
                             }
 
                         }
@@ -769,9 +763,11 @@ namespace DemoInfo
 
                             if (teamID != -1)
                             {
-                                this.tID = teamID;
+                                tID = teamID;
                                 foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                                {
                                     p.Team = Team.Terrorist;
+                                }
                             }
                         }
                     };
@@ -877,14 +873,14 @@ namespace DemoInfo
         private void HandleNewPlayer(Entity playerEntity)
         {
             Player p = null;
-            if (this.PlayerInformations[playerEntity.ID - 1] != null)
+            if (PlayerInformations[playerEntity.ID - 1] != null)
             {
-                p = this.PlayerInformations[playerEntity.ID - 1];
+                p = PlayerInformations[playerEntity.ID - 1];
             }
             else
             {
                 p = new Player();
-                this.PlayerInformations[playerEntity.ID - 1] = p;
+                PlayerInformations[playerEntity.ID - 1] = p;
                 p.SteamID = -1;
                 p.Name = "unconnected";
             }
@@ -911,13 +907,7 @@ namespace DemoInfo
             playerEntity.FindProperty("m_iTeamNum").IntRecived += (sender, e) =>
             {
                 p.TeamID = e.Value;
-
-                if (e.Value == ctID)
-                    p.Team = Team.CounterTerrorist;
-                else if (e.Value == tID)
-                    p.Team = Team.Terrorist;
-                else
-                    p.Team = Team.Spectate;
+                p.Team = TeamFromTeamID(e.Value);
             };
 
             playerEntity.FindProperty("m_iHealth").IntRecived += (sender, e) => p.HP = e.Value;
@@ -942,7 +932,9 @@ namespace DemoInfo
             string weaponPrefix = "m_hMyWeapons.";
 
             if (playerEntity.Props.All(a => a.Entry.PropertyName != "m_hMyWeapons.000"))
+            {
                 weaponPrefix = "bcc_nonlocaldata.m_hMyWeapons.";
+            }
 
             int[] cache = new int[MAXWEAPONS];
             for (int i = 0; i < MAXWEAPONS; i++)
@@ -956,12 +948,12 @@ namespace DemoInfo
                     {
                         if (cache[iForTheMethod] != 0) // Player already has a weapon in this slot.
                         {
-                            p.rawWeapons.Remove(cache[iForTheMethod]);
+                            _ = p.rawWeapons.Remove(cache[iForTheMethod]);
                             cache[iForTheMethod] = 0;
                         }
 
                         cache[iForTheMethod] = index;
-                        AttributeWeapon(index, p);
+                        _ = AttributeWeapon(index, p);
                     }
                     else
                     {
@@ -970,7 +962,7 @@ namespace DemoInfo
                             p.rawWeapons[cache[iForTheMethod]].Owner = null;
                         }
 
-                        p.rawWeapons.Remove(cache[iForTheMethod]);
+                        _ = p.rawWeapons.Remove(cache[iForTheMethod]);
                         cache[iForTheMethod] = 0;
                     }
                 };
@@ -1071,11 +1063,17 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_223"))
+                    {
                         equipment.Weapon = EquipmentElement.USP;
+                    }
                     else if (modelprecache[e2.Value].Contains("_pist_hkp2000"))
+                    {
                         equipment.Weapon = EquipmentElement.P2000;
+                    }
                     else
+                    {
                         throw new InvalidDataException("Unknown weapon model");
+                    }
                 };
             }
 
@@ -1085,12 +1083,18 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_rif_m4a1_s"))
+                    {
                         equipment.Weapon = EquipmentElement.M4A1;
+                    }
                     // if it's not an M4A1-S, check if it's an M4A4
                     else if (modelprecache[e2.Value].Contains("_rif_m4a1"))
+                    {
                         equipment.Weapon = EquipmentElement.M4A4;
+                    }
                     else
+                    {
                         throw new InvalidDataException("Unknown weapon model");
+                    }
                 };
             }
 
@@ -1100,11 +1104,17 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_cz_75"))
+                    {
                         equipment.Weapon = EquipmentElement.CZ;
+                    }
                     else if (modelprecache[e2.Value].Contains("_pist_p250"))
+                    {
                         equipment.Weapon = EquipmentElement.P250;
+                    }
                     else
+                    {
                         throw new InvalidDataException("Unknown weapon model");
+                    }
                 };
             }
 
@@ -1114,11 +1124,17 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_deagle"))
+                    {
                         equipment.Weapon = EquipmentElement.Deagle;
+                    }
                     else if (modelprecache[e2.Value].Contains("_pist_revolver"))
+                    {
                         equipment.Weapon = EquipmentElement.Revolver;
+                    }
                     else
+                    {
                         throw new InvalidDataException("Unknown weapon model");
+                    }
                 };
             }
 
@@ -1128,11 +1144,17 @@ namespace DemoInfo
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_smg_mp7"))
+                    {
                         equipment.Weapon = EquipmentElement.MP7;
+                    }
                     else if (modelprecache[e2.Value].Contains("_smg_mp5sd"))
+                    {
                         equipment.Weapon = EquipmentElement.MP5SD;
+                    }
                     else
+                    {
                         throw new InvalidDataException("Unknown weapon model");
+                    }
                 };
             }
         }
@@ -1154,7 +1176,6 @@ namespace DemoInfo
 
             SendTableParser.FindByName("CBaseTrigger").OnNewEntity += (s1, newResource) =>
             {
-
                 BoundingBoxInformation trigger = new BoundingBoxInformation(newResource.Entity.ID);
                 triggers.Add(trigger);
 
@@ -1180,12 +1201,36 @@ namespace DemoInfo
                 infEntity.Entity.FindProperty("m_hOwnerEntity").IntRecived += (s2, handleID) =>
                 {
                     int playerEntityID = handleID.Value & INDEX_MASK;
-                    if (playerEntityID < PlayerInformations.Length && PlayerInformations[playerEntityID - 1] != null)
+                    if (playerEntityID < PlayerInformations.Length
+                        && PlayerInformations[playerEntityID - 1] != null)
+                    {
                         InfernoOwners[infEntity.Entity.ID] = PlayerInformations[playerEntityID - 1];
+                    }
                 };
             };
 
             inferno.OnDestroyEntity += (s, infEntity) => InfernoOwners.Remove(infEntity.Entity.ID);
+        }
+
+        internal Player PlayerFromPlayerID(int playerID)
+        {
+            return Players.ContainsKey(playerID) ? Players[playerID] : null;
+        }
+
+        internal Team TeamFromTeamID(int teamID)
+        {
+            if (teamID == tID)
+            {
+                return Team.Terrorist;
+            }
+            else if (teamID == ctID)
+            {
+                return Team.CounterTerrorist;
+            }
+            else
+            {
+                return Team.Spectate;
+            }
         }
 
         #region EventCaller
@@ -1384,14 +1429,14 @@ namespace DemoInfo
         #endregion
 
         /// <summary>
-        /// Releases all resource used by the <see cref="DemoInfo.DemoParser"/> object. This must be called or evil things (memory leaks) happen.
+        /// Releases all resource used by the <see cref="DemoParser"/> object. This must be called or evil things (memory leaks) happen.
         /// Sorry for that - I've debugged and I don't know why this is, but I can't fix it somehow.
         /// This is bad, I know.
         /// </summary>
-        /// <remarks>Call <see cref="Dispose"/> when you are finished using the <see cref="DemoInfo.DemoParser"/>. The
-        /// <see cref="Dispose"/> method leaves the <see cref="DemoInfo.DemoParser"/> in an unusable state. After calling
+        /// <remarks>Call <see cref="Dispose"/> when you are finished using the <see cref="DemoParser"/>. The
+        /// <see cref="Dispose"/> method leaves the <see cref="DemoParser"/> in an unusable state. After calling
         /// <see cref="Dispose"/>, you must release all references to the <see cref="DemoInfo.DemoParser"/> so the garbage
-        /// collector can reclaim the memory that the <see cref="DemoInfo.DemoParser"/> was occupying.</remarks>
+        /// collector can reclaim the memory that the <see cref="DemoParser"/> was occupying.</remarks>
         public void Dispose()
         {
             BitStream.Dispose();
@@ -1399,37 +1444,39 @@ namespace DemoInfo
             foreach (Entity entity in Entities)
             {
                 if (entity != null)
+                {
                     entity.Leave();
+                }
             }
 
-            foreach (ServerClass serverClass in this.SendTableParser.ServerClasses)
+            foreach (ServerClass serverClass in SendTableParser.ServerClasses)
             {
                 serverClass.Dispose();
             }
 
-            this.TickDone = null;
-            this.BombAbortDefuse = null;
-            this.BombAbortPlant = null;
-            this.BombBeginDefuse = null;
-            this.BombBeginPlant = null;
-            this.BombDefused = null;
-            this.BombExploded = null;
-            this.BombPlanted = null;
-            this.DecoyNadeEnded = null;
-            this.DecoyNadeStarted = null;
-            this.ExplosiveNadeExploded = null;
-            this.FireNadeEnded = null;
-            this.FireNadeStarted = null;
-            this.FireNadeWithOwnerStarted = null;
-            this.FlashNadeExploded = null;
-            this.HeaderParsed = null;
-            this.MatchStarted = null;
-            this.NadeReachedTarget = null;
-            this.PlayerKilled = null;
-            this.RoundStart = null;
-            this.SmokeNadeEnded = null;
-            this.SmokeNadeStarted = null;
-            this.WeaponFired = null;
+            TickDone = null;
+            BombAbortDefuse = null;
+            BombAbortPlant = null;
+            BombBeginDefuse = null;
+            BombBeginPlant = null;
+            BombDefused = null;
+            BombExploded = null;
+            BombPlanted = null;
+            DecoyNadeEnded = null;
+            DecoyNadeStarted = null;
+            ExplosiveNadeExploded = null;
+            FireNadeEnded = null;
+            FireNadeStarted = null;
+            FireNadeWithOwnerStarted = null;
+            FlashNadeExploded = null;
+            HeaderParsed = null;
+            MatchStarted = null;
+            NadeReachedTarget = null;
+            PlayerKilled = null;
+            RoundStart = null;
+            SmokeNadeEnded = null;
+            SmokeNadeStarted = null;
+            WeaponFired = null;
 
             Players.Clear();
         }

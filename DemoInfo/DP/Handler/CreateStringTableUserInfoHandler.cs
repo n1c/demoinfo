@@ -1,10 +1,6 @@
-﻿using DemoInfo.Messages;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DemoInfo.DP.Handler
 {
@@ -21,12 +17,16 @@ namespace DemoInfo.DP.Handler
             }
 
             if (reader.ReadBit())
+            {
                 throw new NotImplementedException("Encoded with dictionaries, unable to decode");
+            }
 
             int nTemp = table.MaxEntries;
             int nEntryBits = 0;
             while ((nTemp >>= 1) != 0)
+            {
                 ++nEntryBits;
+            }
 
             List<string> history = new List<string>();
 
@@ -70,10 +70,14 @@ namespace DemoInfo.DP.Handler
                 }
 
                 if (entry == null)
+                {
                     entry = "";
+                }
 
                 if (history.Count > 31)
+                {
                     history.RemoveAt(0);
+                }
 
                 history.Add(entry);
 
@@ -94,7 +98,9 @@ namespace DemoInfo.DP.Handler
                 }
 
                 if (userdata.Length == 0)
+                {
                     continue;
+                }
 
                 if (table.Name == "userinfo")
                 {

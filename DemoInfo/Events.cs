@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 
 namespace DemoInfo
@@ -13,7 +9,7 @@ namespace DemoInfo
 
         public HeaderParsedEventArgs(DemoHeader header)
         {
-            this.Header = header;
+            Header = header;
         }
     }
 
@@ -93,9 +89,6 @@ namespace DemoInfo
     {
         public Equipment Weapon { get; internal set; }
 
-        [Obsolete("Use \"Victim\" instead. This will be removed soon™", false)]
-        public Player DeathPerson { get { return Victim; } }
-
         public Player Victim { get; internal set; }
 
         public Player Killer { get; internal set; }
@@ -134,7 +127,7 @@ namespace DemoInfo
 
         internal NadeEventArgs(EquipmentElement type)
         {
-            this.NadeType = type;
+            NadeType = type;
         }
     }
 
@@ -360,13 +353,7 @@ namespace DemoInfo
         internal int EntityID { get; set; }
 
         public EquipmentElement Weapon { get; set; }
-        public EquipmentClass Class
-        {
-            get
-            {
-                return (EquipmentClass)(((int)Weapon / 100) + 1);
-            }
-        }
+        public EquipmentClass Class => (EquipmentClass)(((int)Weapon / 100) + 1);
 
         public string OriginalString { get; set; }
 
@@ -378,36 +365,30 @@ namespace DemoInfo
 
         public Player Owner { get; set; }
 
-        public int ReserveAmmo
-        {
-            get
-            {
-                return (Owner != null && AmmoType != -1) ? Owner.AmmoLeft[AmmoType] : -1;
-            }
-        }
+        public int ReserveAmmo => (Owner != null && AmmoType != -1) ? Owner.AmmoLeft[AmmoType] : -1;
 
         internal Equipment()
         {
-            this.Weapon = EquipmentElement.Unknown;
+            Weapon = EquipmentElement.Unknown;
         }
 
         internal Equipment(string originalString)
         {
             OriginalString = originalString;
 
-            this.Weapon = MapEquipment(originalString);
+            Weapon = MapEquipment(originalString);
         }
 
         internal Equipment(string originalString, string skin)
         {
             OriginalString = originalString;
 
-            this.Weapon = MapEquipment(originalString);
+            Weapon = MapEquipment(originalString);
 
             SkinID = skin;
         }
 
-        const string WEAPON_PREFIX = "weapon_";
+        private const string WEAPON_PREFIX = "weapon_";
 
         public static EquipmentElement MapEquipment(string OriginalString)
         {

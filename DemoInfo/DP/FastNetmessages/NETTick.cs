@@ -1,26 +1,27 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace DemoInfo
 {
     public struct NETTick
     {
-        public UInt32 Tick;
-        public UInt32 HostComputationTime;
-        public UInt32 HostComputationTimeStdDeviation;
-        public UInt32 HostFramestartTimeStdDeviation;
+        public uint Tick;
+        public uint HostComputationTime;
+        public uint HostComputationTimeStdDeviation;
+        public uint HostFramestartTimeStdDeviation;
 
         public void Parse(IBitStream bitstream, DemoParser parser)
         {
             while (!bitstream.ChunkFinished)
             {
-                var desc = bitstream.ReadProtobufVarInt();
-                var wireType = desc & 7;
-                var fieldnum = desc >> 3;
+                int desc = bitstream.ReadProtobufVarInt();
+                int wireType = desc & 7;
+                int fieldnum = desc >> 3;
                 if (wireType != 0)
+                {
                     throw new InvalidDataException();
+                }
 
-                var val = (uint)bitstream.ReadProtobufVarInt();
+                uint val = (uint)bitstream.ReadProtobufVarInt();
 
                 switch (fieldnum)
                 {
