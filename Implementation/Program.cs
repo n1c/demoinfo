@@ -5,21 +5,25 @@ using DemoInfo;
 
 namespace Implementation
 {
-    class MainClass
+    class Program
     {
         private static DemoParser _parser;
 
-        public static void Main()
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Implementation booting");
-            string path = "../../../../_demos/triumph-vs-teamone-m1-dust2.dem";
-            if (!File.Exists(path))
+            if (args.Length == 0)
             {
-                Console.WriteLine("Demo doesn't exist!: " + path);
+                Console.WriteLine("Please provide a path as first param.");
                 Environment.Exit(1);
             }
 
-            FileStream input = File.OpenRead(path);
+            if (!File.Exists(args[0]))
+            {
+                Console.WriteLine("Demo doesn't exist!: " + args[0]);
+                Environment.Exit(1);
+            }
+
+            FileStream input = File.OpenRead(args[0]);
             _parser = new DemoParser(input);
             _parser.HeaderParsed += (object sender, HeaderParsedEventArgs e) =>
             {
