@@ -517,7 +517,7 @@ namespace DemoInfo
         /// Same as ParseToEnd() but accepts a CancellationToken to be able to cancel parsing
         /// </summary>
         /// <param name="token"></param>
-        public async void ParseToEnd(CancellationToken token)
+        public void ParseToEnd(CancellationToken token)
         {
             while (ParseNextTick())
             {
@@ -527,7 +527,7 @@ namespace DemoInfo
                 }
 
                 // @TODO: is this correct usage? Should we Task.Run rather?
-                await Task.Yield();
+                // await Task.Yield();
             }
 
             // @TODO: Is this a bad assumption?

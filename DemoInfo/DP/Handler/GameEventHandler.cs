@@ -164,9 +164,22 @@ namespace DemoInfo.DP.Handler
                 case "bomb_abortdefuse":
                     HandleAbortDefuse(rawEvent, parser, eventDescriptor);
                     break;
+                case "player_footstep":
+                case "item_equip":
+                case "item_pickup":
+                case "item_remove":
+                case "player_spawn":
+                case "player_jump":
+                case "weapon_zoom":
+                case "hltv_chase":
+                    // NOOP
+                    break;
+                default:
+                    Console.WriteLine("Unhandled: " + eventDescriptor.Name);
+                    break;
             }
 
-            // @TODO: player jump
+            // @TODO: player jump?
 
             //if (eventDescriptor.Name != "player_footstep") {
             //	Console.WriteLine (eventDescriptor.Name);
