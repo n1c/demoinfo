@@ -164,26 +164,41 @@ namespace DemoInfo.DP.Handler
                 case "bomb_abortdefuse":
                     HandleAbortDefuse(rawEvent, parser, eventDescriptor);
                     break;
-                case "player_footstep":
+                case "announce_phase_end":
+                case "bomb_dropped":
+                case "bomb_pickup":
+                case "buytime_ended":
+                case "cs_pre_restart":
+                case "cs_round_start_beep":
+                case "cs_round_final_beep":
+                case "cs_win_panel_round":
+                case "endmatch_cmm_start_reveal_items":
+                case "hltv_chase":
+                case "hltv_fixed":
+                case "hltv_status":
                 case "item_equip":
                 case "item_pickup":
                 case "item_remove":
+                case "other_death":
+                case "player_connect_full":
+                case "player_falldamage":
+                case "player_footstep":
                 case "player_spawn":
                 case "player_jump":
+                case "round_announce_warmup":
+                case "round_announce_match_point":
+                case "round_time_warning":
+                case "round_prestart":
+                case "round_poststart":
+                case "server_cvar":
+                case "weapon_reload":
                 case "weapon_zoom":
-                case "hltv_chase":
                     // NOOP
                     break;
                 default:
                     Console.WriteLine("Unhandled: " + eventDescriptor.Name);
                     break;
             }
-
-            // @TODO: player jump?
-
-            //if (eventDescriptor.Name != "player_footstep") {
-            //	Console.WriteLine (eventDescriptor.Name);
-            //}
         }
 
         private static void HandleBomb(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
