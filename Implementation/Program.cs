@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using DemoInfo;
 
 namespace Implementation
@@ -23,6 +24,8 @@ namespace Implementation
                 Environment.Exit(1);
             }
 
+            Console.WriteLine("Going to parse: " + args[0]);
+
             FileStream input = File.OpenRead(args[0]);
             _parser = new DemoParser(input);
             _parser.HeaderParsed += (object sender, HeaderParsedEventArgs e) =>
@@ -39,6 +42,16 @@ namespace Implementation
             };
 
             /*
+            _parser.PlayerKilled += (object sender, PlayerKilledEventArgs e) =>
+            {
+                if (e.ThroughSmoke || e.NoScope || e.AttackerBlind)
+                {
+                    Console.WriteLine($"PlayerKilled ThroughSmoke:{e.ThroughSmoke} NoScope:{e.NoScope} AttackerBlind:{e.AttackerBlind}");
+                }
+            };
+            */
+
+            /*
             _parser.WeaponFired += (object sender, WeaponFiredEventArgs e) =>
             {
                 Console.WriteLine($"WeaponFired! {e.Shooter.Name} ({e.Weapon.Weapon}) {e.Shooter.Position}");
@@ -46,7 +59,10 @@ namespace Implementation
             */
 
             _parser.ParseHeader();
-            _parser.ParseToEnd(CancellationToken.None);
+            Task t = _parser.ParseToEnd();
+            // _parser.CancelParsing();
+            t.Wait();
+
             Console.WriteLine("FINISHED");
         }
     }

@@ -357,10 +357,12 @@ namespace DemoInfo.DP.Handler
                 Victim = parser.PlayerFromPlayerID((int)data["userid"]),
                 Killer = parser.PlayerFromPlayerID((int)data["attacker"]),
                 Assister = parser.PlayerFromPlayerID((int)data["assister"]),
-                Headshot = (bool)data["headshot"],
                 Weapon = new Equipment((string)data["weapon"], (string)data["weapon_itemid"]),
                 PenetratedObjects = (int)data["penetrated"],
-                // @TODO: Handle new noscope/smoke/etc?
+                Headshot = (bool)data["headshot"],
+                AttackerBlind = (bool)data["attackerblind"],
+                NoScope = (bool)data["noscope"],
+                ThroughSmoke = (bool)data["thrusmoke"],
             };
 
             if (data.ContainsKey("assistedflash"))
