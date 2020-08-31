@@ -23,6 +23,7 @@ namespace DemoInfo
         internal const int MAX_ENTITIES = 1 << MAX_EDICT_BITS;
         private const int MAXPLAYERS = 64;
         private const int MAXWEAPONS = 64;
+        private bool MustParse = false;
 
         #region Events
         /// <summary>
@@ -514,24 +515,24 @@ namespace DemoInfo
         }
 
         /// <summary>
-        /// Same as ParseToEnd() but accepts a CancellationToken to be able to cancel parsing
+        /// Parses this file until the end of the demo is reached.
         /// </summary>
         /// <param name="token"></param>
-        public async void ParseToEnd(CancellationToken token)
+        public Task ParseToEnd()
         {
-            while (ParseNextTick())
+            MustParse = true;
+            return Task.Run(() =>
             {
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
+                while (ParseNextTick() && MustParse) ;
 
-                // @TODO: is this correct usage? Should we Task.Run rather?
-                await Task.Yield();
-            }
+                // @TODO: Is this a bad assumption?
+                Dispose();
+            });
+        }
 
-            // @TODO: Is this a bad assumption?
-            Dispose();
+        public void CancelParsing()
+        {
+            MustParse = false;
         }
 
         /// <summary>

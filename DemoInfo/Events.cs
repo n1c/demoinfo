@@ -28,14 +28,12 @@ namespace DemoInfo
     public class RoundEndedEventArgs : EventArgs
     {
         public RoundEndReason Reason { get; set; }
-
         public string Message { get; set; }
 
         /// <summary>
         /// The winning team. Spectate for everything that isn't CT or T.
         /// </summary>
         public Team Winner;
-
     }
 
     public class RoundOfficiallyEndedEventArgs : EventArgs
@@ -45,7 +43,6 @@ namespace DemoInfo
     public class RoundMVPEventArgs : EventArgs
     {
         public Player Player { get; set; }
-
         public RoundMVPReason Reason { get; set; }
     }
 
@@ -75,30 +72,23 @@ namespace DemoInfo
     public class PlayerTeamEventArgs : EventArgs
     {
         public Player Swapped { get; internal set; }
-
         public Team NewTeam { get; internal set; }
-
         public Team OldTeam { get; internal set; }
-
         public bool Silent { get; internal set; }
-
         public bool IsBot { get; internal set; }
     }
 
     public class PlayerKilledEventArgs : EventArgs
     {
         public Equipment Weapon { get; internal set; }
-
         public Player Victim { get; internal set; }
-
         public Player Killer { get; internal set; }
-
         public Player Assister { get; internal set; }
-
         public int PenetratedObjects { get; internal set; }
-
         public bool Headshot { get; internal set; }
-
+        public bool AttackerBlind { get; internal set; }
+        public bool NoScope { get; internal set; }
+        public bool ThroughSmoke { get; internal set; }
         public bool AssistedFlash { get; internal set; }
     }
 
@@ -110,7 +100,6 @@ namespace DemoInfo
     public class WeaponFiredEventArgs : EventArgs
     {
         public Equipment Weapon { get; internal set; }
-
         public Player Shooter { get; internal set; }
     }
 
@@ -122,7 +111,6 @@ namespace DemoInfo
 
         internal NadeEventArgs()
         {
-
         }
 
         internal NadeEventArgs(EquipmentElement type)
@@ -135,53 +123,46 @@ namespace DemoInfo
     {
         public FireEventArgs() : base(EquipmentElement.Incendiary)
         {
-
         }
     }
+
     public class SmokeEventArgs : NadeEventArgs
     {
         public SmokeEventArgs() : base(EquipmentElement.Smoke)
         {
-
         }
     }
+
     public class DecoyEventArgs : NadeEventArgs
     {
         public DecoyEventArgs() : base(EquipmentElement.Decoy)
         {
-
         }
     }
+
     public class FlashEventArgs : NadeEventArgs
     {
-        //previous blind implementation
-        public Player[] FlashedPlayers { get; internal set; }
-        //
-
         public FlashEventArgs() : base(EquipmentElement.Flash)
         {
-
         }
     }
+
     public class GrenadeEventArgs : NadeEventArgs
     {
         public GrenadeEventArgs() : base(EquipmentElement.HE)
         {
-
         }
     }
 
     public class BombEventArgs : EventArgs
     {
         public Player Player { get; set; }
-
         public char Site { get; set; }
     }
 
     public class BombDefuseEventArgs : EventArgs
     {
         public Player Player { get; set; }
-
         public bool HasKit { get; set; }
     }
 
@@ -245,9 +226,7 @@ namespace DemoInfo
     public class BlindEventArgs : EventArgs
     {
         public Player Player { get; set; }
-
         public Player Attacker { get; set; }
-
         public float? FlashDuration { get; set; }
     }
 
@@ -351,20 +330,13 @@ namespace DemoInfo
     public class Equipment
     {
         internal int EntityID { get; set; }
-
         public EquipmentElement Weapon { get; set; }
         public EquipmentClass Class => (EquipmentClass)(((int)Weapon / 100) + 1);
-
         public string OriginalString { get; set; }
-
         public string SkinID { get; set; }
-
         public int AmmoInMagazine { get; set; }
-
         internal int AmmoType { get; set; }
-
         public Player Owner { get; set; }
-
         public int ReserveAmmo => (Owner != null && AmmoType != -1) ? Owner.AmmoLeft[AmmoType] : -1;
 
         internal Equipment()
@@ -375,16 +347,13 @@ namespace DemoInfo
         internal Equipment(string originalString)
         {
             OriginalString = originalString;
-
             Weapon = MapEquipment(originalString);
         }
 
         internal Equipment(string originalString, string skin)
         {
             OriginalString = originalString;
-
             Weapon = MapEquipment(originalString);
-
             SkinID = skin;
         }
 
