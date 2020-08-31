@@ -15,6 +15,8 @@ namespace DemoInfo.DP
 
         public PropertyEntry[] Props { get; private set; }
 
+        public event EventHandler<EntityLeftPVSEventArgs> EntityLeft;
+
         public Entity(int id, ServerClass serverClass)
         {
             ID = id;
@@ -97,6 +99,8 @@ namespace DemoInfo.DP
 
         public void Leave()
         {
+            EntityLeft?.Invoke(this, new EntityLeftPVSEventArgs(this));
+
             foreach (PropertyEntry prop in Props)
             {
                 prop.Destroy();
@@ -316,7 +320,7 @@ namespace DemoInfo.DP
         }
     }
 
-    public class RecordedPropertyUpdate<T>
+    internal class RecordedPropertyUpdate<T>
     {
         public int PropIndex;
         public T Value;
@@ -325,6 +329,16 @@ namespace DemoInfo.DP
         {
             PropIndex = propIndex;
             Value = value;
+        }
+    }
+
+    internal class EntityLeftPVSEventArgs
+    {
+        public Entity Entity;
+
+        public EntityLeftPVSEventArgs(Entity entity)
+        {
+            Entity = entity;
         }
     }
     #endregion

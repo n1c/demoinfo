@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DemoInfo
@@ -319,7 +318,12 @@ namespace DemoInfo
         /// An map entity <-> weapon. Used to remember whether a weapon is a p250,
         /// how much ammonition it has, etc.
         /// </summary>
-        private Equipment[] weapons = new Equipment[MAX_ENTITIES];
+        internal Equipment[] weapons = new Equipment[MAX_ENTITIES];
+
+        /// <summary>
+        /// The projectiles currently flying around. This is important since a Projectile has a m_hThrower, and this is cool for molotovs.
+        /// </summary>
+        internal Projectile[] projectiles = new Projectile[MAX_ENTITIES];
 
         /// <summary>
         /// The indicies of the bombsites - useful to find out
@@ -413,7 +417,6 @@ namespace DemoInfo
         /// Holds inferno_startburn event args so they can be matched with player
         /// </summary>
         internal Queue<Tuple<int, FireEventArgs>> GEH_StartBurns = new Queue<Tuple<int, FireEventArgs>>();
-
 
         // These could be Dictionary<int, RecordedPropertyUpdate[]>, but I was too lazy to
         // define that class. Also: It doesn't matter anyways, we always have to cast.
@@ -685,6 +688,7 @@ namespace DemoInfo
             HandleBombSites();
             HandlePlayers();
             HandleWeapons();
+            HandleProjectiles();
             HandleInfernos();
         }
 
@@ -954,7 +958,7 @@ namespace DemoInfo
                         }
 
                         cache[iForTheMethod] = index;
-                        _ = AttributeWeapon(index, p);
+                        AttributeWeapon(index, p);
                     }
                     else
                     {
@@ -1019,13 +1023,12 @@ namespace DemoInfo
             }
         }
 
-        private bool AttributeWeapon(int weaponEntityIndex, Player p)
+        private void AttributeWeapon(int weaponEntityIndex, Player p)
         {
             Equipment weapon = weapons[weaponEntityIndex];
             weapon.Owner = p;
+            weapon.LastOwner = p;
             p.rawWeapons[weaponEntityIndex] = weapon;
-
-            return true;
         }
 
         private void HandleWeapons()
@@ -1043,6 +1046,11 @@ namespace DemoInfo
 
         private void HandleWeapon(object sender, EntityCreatedEventArgs e)
         {
+            e.Entity.EntityLeft += (_, left) =>
+            {
+                weapons[left.Entity.ID] = new Equipment();
+            };
+
             Equipment equipment = weapons[e.Entity.ID];
             equipment.EntityID = e.Entity.ID;
             equipment.Weapon = equipmentMapping[e.Class];
@@ -1160,6 +1168,29 @@ namespace DemoInfo
             }
         }
 
+        private void HandleProjectiles()
+        {
+            SendTableParser.FindByName("CBaseCSGrenadeProjectile").OnNewEntity += HandleNewProjectile;
+            SendTableParser.FindByName("CDecoyProjectile").OnNewEntity += HandleNewProjectile;
+            SendTableParser.FindByName("CMolotovProjectile").OnNewEntity += HandleNewProjectile;
+            SendTableParser.FindByName("CSmokeGrenadeProjectile").OnNewEntity += HandleNewProjectile;
+            SendTableParser.FindByName("CSensorGrenadeProjectile").OnNewEntity += HandleNewProjectile;
+            // CSnowballProjectile
+        }
+
+        private void HandleNewProjectile(object _, EntityCreatedEventArgs newEntity)
+        {
+            projectiles[newEntity.Entity.ID] = new Projectile();
+            newEntity.Entity.FindProperty("m_hThrower").IntRecived += (__, e) =>
+            {
+                Console.WriteLine("FOUND m_hThrower! " + e.Entity.ID + "::" + newEntity.Entity.ID);
+                projectiles[e.Entity.ID].Owner = PlayerInformations[(e.Value & INDEX_MASK) - 1];
+                projectiles[e.Entity.ID].OwnerID = e.Value & INDEX_MASK;
+            };
+
+            newEntity.Entity.EntityLeft += (sender, e) => projectiles[e.Entity.ID] = null;
+        }
+
         internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();
         private void HandleBombSites()
         {
@@ -1199,7 +1230,7 @@ namespace DemoInfo
 
             inferno.OnNewEntity += (s, infEntity) =>
             {
-                infEntity.Entity.FindProperty("m_hOwnerEntity").IntRecived += (s2, handleID) =>
+                infEntity.Entity.FindProperty("m_hOwnerEntity").IntRecived += (_, handleID) =>
                 {
                     int playerEntityID = handleID.Value & INDEX_MASK;
                     if (playerEntityID < PlayerInformations.Length

@@ -442,9 +442,29 @@ namespace DemoInfo.DP.Handler
         {
             T nade = new T();
 
-            if (data.ContainsKey("userid") && parser.Players.ContainsKey((int)data["userid"]))
+            if (parser.projectiles[(int)data["entityid"]] != null)
             {
+                // DemoInfo.FlashEventArgs
+                // DemoInfo.GrenadeEventArgs
+                // DemoInfo.SmokeEventArgs
+                Projectile nadeEntity = parser.projectiles[(int)data["entityid"]];
+                nade.ThrownBy = nadeEntity.Owner;
+            }
+            else if (data.ContainsKey("userid") && parser.Players.ContainsKey((int)data["userid"]))
+            {
+                Console.WriteLine(typeof(T) + " projectile did not exist!");
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
+            }
+            /*
+            else if (parser.Entities[(int)data["entityid"]] != null)
+            {
+                Console.WriteLine("Parser Entity exists " + parser.Entities[(int)data["entityid"]]);
+            }
+            */
+            else
+            {
+                // DemoInfo.FireEventArgs
+                Console.WriteLine(typeof(T) + " no projectile thrower info! " + data["entityid"]);
             }
 
             nade.Position = new Vector

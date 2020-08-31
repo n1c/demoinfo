@@ -66,7 +66,6 @@ namespace DemoInfo
         {
             Velocity = new Vector();
             LastAlivePosition = new Vector();
-
         }
 
         /// <summary>

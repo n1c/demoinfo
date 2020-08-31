@@ -1,12 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using DemoInfo;
 
 namespace Implementation
 {
-    class Program
+    internal class Program
     {
         private static DemoParser _parser;
 
