@@ -46,13 +46,14 @@ namespace DemoInfo.DP.Handler
                 else
                 {
                     Entity e = parser.Entities[currentEntity];
-                    e.ServerClass.AnnounceDestroyedEntity(e);
+                    if (e != null) // why is it sometimes null?
+                    {
+                        e.ServerClass.AnnounceDestroyedEntity(e);
+                        e.Leave();
+                        parser.Entities[currentEntity] = null;
+                    }
 
-                    // leave / destroy
-                    e.Leave();
-                    parser.Entities[currentEntity] = null;
-
-                    //dunno, but you gotta read this.
+                    // Dunno, but you gotta read this.
                     if (reader.ReadBit())
                     {
                     }
