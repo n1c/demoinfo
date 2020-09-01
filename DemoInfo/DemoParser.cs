@@ -408,12 +408,6 @@ namespace DemoInfo
         internal Dictionary<int, GameEventList.Descriptor> GEH_Descriptors = null;
 
         /// <summary>
-        /// The blind players, so we can tell who was flashed by a flashbang.
-        /// previous blind implementation
-        /// </summary>
-        internal List<Player> GEH_BlindPlayers = new List<Player>();
-
-        /// <summary>
         /// Holds inferno_startburn event args so they can be matched with player
         /// </summary>
         internal Queue<Tuple<int, FireEventArgs>> GEH_StartBurns = new Queue<Tuple<int, FireEventArgs>>();
@@ -755,7 +749,6 @@ namespace DemoInfo
                                     p.Team = Team.CounterTerrorist;
                                 }
                             }
-
                         }
                         else if (recivedTeamName.Value == "TERRORIST")
                         {
@@ -1183,7 +1176,6 @@ namespace DemoInfo
             projectiles[newEntity.Entity.ID] = new Projectile();
             newEntity.Entity.FindProperty("m_hThrower").IntRecived += (__, e) =>
             {
-                Console.WriteLine("FOUND m_hThrower! " + e.Entity.ID + "::" + newEntity.Entity.ID);
                 projectiles[e.Entity.ID].Owner = PlayerInformations[(e.Value & INDEX_MASK) - 1];
                 projectiles[e.Entity.ID].OwnerID = e.Value & INDEX_MASK;
             };
