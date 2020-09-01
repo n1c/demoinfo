@@ -441,10 +441,10 @@ namespace DemoInfo
         public float TickTime => Header.PlaybackTime / Header.PlaybackFrames;
 
         /// <summary>
-        /// Gets the parsing progess. 0 = beginning, ~1 = finished (it can actually be > 1, so be careful!)
+        /// Gets the parsing progress. 0 = beginning, ~1 = finished (it can actually be > 1, so be careful!)
         /// </summary>
-        /// <value>The parsing progess.</value>
-        public float ParsingProgess => CurrentTick / (float)Header.PlaybackFrames;
+        /// <value>The parsing progress.</value>
+        public float ParsingProgress => CurrentTick / (float)Header.PlaybackFrames;
 
         /// <summary>
         /// The current tick the parser has seen. So if it's a 16-tick demo,
@@ -514,7 +514,6 @@ namespace DemoInfo
         /// <summary>
         /// Parses this file until the end of the demo is reached.
         /// </summary>
-        /// <param name="token"></param>
         public Task ParseToEnd()
         {
             MustParse = true;
@@ -542,7 +541,6 @@ namespace DemoInfo
             {
                 throw new InvalidOperationException("You need to call ParseHeader first before you call ParseToEnd or ParseNextTick!");
             }
-
 
             bool b = ParseTick();
 
@@ -594,7 +592,11 @@ namespace DemoInfo
 
             if (b)
             {
-                TickDone?.Invoke(this, new TickDoneEventArgs());
+                TickDone?.Invoke(this, new TickDoneEventArgs
+                {
+                    CurrentTick = CurrentTick,
+                    ParsingProgress = ParsingProgress,
+                });
             }
 
             return b;
@@ -671,7 +673,7 @@ namespace DemoInfo
         }
 
         /// <summary>
-        /// Binds the events for entities. And Entity has many properties.
+        /// Binds the events for entities. An Entity has many properties.
         /// You can subscribe to when an entity of a specific class is created,
         /// and then you can subscribe to updates of properties of this entity.
         /// This is a bit complex, but very fast.
@@ -1168,19 +1170,28 @@ namespace DemoInfo
             SendTableParser.FindByName("CMolotovProjectile").OnNewEntity += HandleNewProjectile;
             SendTableParser.FindByName("CSmokeGrenadeProjectile").OnNewEntity += HandleNewProjectile;
             SendTableParser.FindByName("CSensorGrenadeProjectile").OnNewEntity += HandleNewProjectile;
+            // CBaseGrenade
             // CSnowballProjectile
         }
 
-        private void HandleNewProjectile(object _, EntityCreatedEventArgs newEntity)
+        private void HandleNewProjectile(object _, EntityCreatedEventArgs entityCreatedEvent)
         {
-            projectiles[newEntity.Entity.ID] = new Projectile();
-            newEntity.Entity.FindProperty("m_hThrower").IntRecived += (__, e) =>
+            Entity entity = entityCreatedEvent.Entity;
+
+            projectiles[entity.ID] = new Projectile
+            {
+                ServerClassName = entity.ServerClass.Name,
+            };
+
+            entity.FindProperty("m_hThrower").IntRecived += (__, e) =>
             {
                 projectiles[e.Entity.ID].Owner = PlayerInformations[(e.Value & INDEX_MASK) - 1];
                 projectiles[e.Entity.ID].OwnerID = e.Value & INDEX_MASK;
             };
 
-            newEntity.Entity.EntityLeft += (sender, e) => projectiles[e.Entity.ID] = null;
+            entity.FindProperty("m_vecVelocity").VectorRecived += (__, e) => projectiles[entity.ID].Position = e.Value;
+
+            entity.EntityLeft += (sender, e) => projectiles[e.Entity.ID] = null;
         }
 
         internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();

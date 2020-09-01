@@ -15,6 +15,8 @@ namespace DemoInfo
 
     public class TickDoneEventArgs : EventArgs
     {
+        public int CurrentTick { get; set; }
+        public float ParsingProgress { get; set; }
     }
 
     public class MatchStartedEventArgs : EventArgs

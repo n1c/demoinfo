@@ -27,35 +27,11 @@ namespace Implementation
 
             FileStream input = File.OpenRead(args[0]);
             _parser = new DemoParser(input);
-            _parser.HeaderParsed += (object sender, HeaderParsedEventArgs e) =>
-            {
-                Console.WriteLine($"Header parsed! {_parser.Map}, Frames:{_parser.Header.PlaybackFrames}, Ticks: {_parser.Header.PlaybackTicks}");
-            };
+            _parser.HeaderParsed += HeaderParsed;
 
-            _parser.TickDone += (object sender, TickDoneEventArgs e) =>
-            {
-                if (_parser.CurrentTick % 10000 == 0)
-                {
-                    Console.WriteLine($"Progress: {Math.Floor(_parser.ParsingProgess * 100)}%");
-                }
-            };
-
-            /*
-            _parser.PlayerKilled += (object sender, PlayerKilledEventArgs e) =>
-            {
-                if (e.ThroughSmoke || e.NoScope || e.AttackerBlind)
-                {
-                    Console.WriteLine($"PlayerKilled ThroughSmoke:{e.ThroughSmoke} NoScope:{e.NoScope} AttackerBlind:{e.AttackerBlind}");
-                }
-            };
-            */
-
-            /*
-            _parser.WeaponFired += (object sender, WeaponFiredEventArgs e) =>
-            {
-                Console.WriteLine($"WeaponFired! {e.Shooter.Name} ({e.Weapon.Weapon}) {e.Shooter.Position}");
-            };
-            */
+            _parser.TickDone += TickDone;
+            // _parser.PlayerKilled += PlayerKilled;
+            // _parser.WeaponFired += WeaponFired;
 
             _parser.ParseHeader();
             Task t = _parser.ParseToEnd();
@@ -63,6 +39,32 @@ namespace Implementation
             t.Wait();
 
             Console.WriteLine("FINISHED");
+        }
+
+        private static void HeaderParsed(object sender, HeaderParsedEventArgs e)
+        {
+            Console.WriteLine($"Header parsed! {e.Header.MapName}, Frames:{e.Header.PlaybackFrames}, Ticks: {e.Header.PlaybackTicks}");
+        }
+
+        private static void TickDone(object sender, TickDoneEventArgs e)
+        {
+            if (e.CurrentTick % 10000 == 0)
+            {
+                Console.WriteLine($"Progress: {Math.Floor(e.ParsingProgress * 100)}%");
+            }
+        }
+
+        private static void PlayerKilled(object sender, PlayerKilledEventArgs e)
+        {
+            if (e.ThroughSmoke || e.NoScope || e.AttackerBlind)
+            {
+                Console.WriteLine($"PlayerKilled ThroughSmoke:{e.ThroughSmoke} NoScope:{e.NoScope} AttackerBlind:{e.AttackerBlind}");
+            }
+        }
+
+        private static void WeaponFired(object sender, WeaponFiredEventArgs e)
+        {
+            Console.WriteLine($"WeaponFired! {e.Shooter.Name} ({e.Weapon.Weapon}) {e.Shooter.Position}");
         }
     }
 }

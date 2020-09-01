@@ -444,9 +444,6 @@ namespace DemoInfo.DP.Handler
             int entityID = (int)data["entityid"];
             if (parser.projectiles[entityID] != null)
             {
-                // DemoInfo.FlashEventArgs
-                // DemoInfo.GrenadeEventArgs
-                // DemoInfo.SmokeEventArgs
                 Projectile nadeEntity = parser.projectiles[entityID];
                 nade.ThrownBy = nadeEntity.Owner;
             }
@@ -455,23 +452,19 @@ namespace DemoInfo.DP.Handler
                 Console.WriteLine(typeof(T) + " projectile did not exist!");
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
             }
-
+            else if (typeof(T).Equals(typeof(FireEventArgs)))
+            {
+                if (parser.InfernoOwners.ContainsKey(entityID))
+                {
+                    nade.ThrownBy = parser.InfernoOwners[entityID];
+                }
+            }
             /*
             else if (parser.Entities[(int)data["entityid"]] != null)
             {
                 Console.WriteLine("Parser Entity exists " + parser.Entities[(int)data["entityid"]]);
             }
             */
-
-            else if (typeof(T).Equals(typeof(FireEventArgs)))
-            {
-                // DemoInfo.FireEventArgs
-                // fireEndArgs.ThrownBy = parser.InfernoOwners[entityID];
-                if (parser.InfernoOwners.ContainsKey(entityID))
-                {
-                    nade.ThrownBy = parser.InfernoOwners[entityID];
-                }
-            }
             else
             {
                 Console.WriteLine("No thrower for " + typeof(T) + " :: " + entityID);
