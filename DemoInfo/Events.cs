@@ -15,6 +15,8 @@ namespace DemoInfo
 
     public class TickDoneEventArgs : EventArgs
     {
+        public int CurrentTick { get; set; }
+        public float ParsingProgress { get; set; }
     }
 
     public class MatchStartedEventArgs : EventArgs
@@ -337,6 +339,7 @@ namespace DemoInfo
         public int AmmoInMagazine { get; set; }
         internal int AmmoType { get; set; }
         public Player Owner { get; set; }
+        public Player LastOwner { get; set; }
         public int ReserveAmmo => (Owner != null && AmmoType != -1) ? Owner.AmmoLeft[AmmoType] : -1;
 
         internal Equipment()

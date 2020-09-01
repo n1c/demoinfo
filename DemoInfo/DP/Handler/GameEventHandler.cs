@@ -133,8 +133,7 @@ namespace DemoInfo.DP.Handler
                 case "inferno_expire":
                     Dictionary<string, object> fireEndData = MapData(eventDescriptor, rawEvent);
                     FireEventArgs fireEndArgs = FillNadeEvent<FireEventArgs>(fireEndData, parser);
-                    int entityID = (int)fireEndData["entityid"];
-                    fireEndArgs.ThrownBy = parser.InfernoOwners[entityID];
+                    fireEndArgs.ThrownBy = parser.InfernoOwners[(int)fireEndData["entityid"]];
                     parser.RaiseFireEnd(fireEndArgs);
                     break;
                 case "player_connect":
@@ -442,9 +441,33 @@ namespace DemoInfo.DP.Handler
         {
             T nade = new T();
 
-            if (data.ContainsKey("userid") && parser.Players.ContainsKey((int)data["userid"]))
+            int entityID = (int)data["entityid"];
+            if (parser.projectiles[entityID] != null)
             {
+                Projectile nadeEntity = parser.projectiles[entityID];
+                nade.ThrownBy = nadeEntity.Owner;
+            }
+            else if (data.ContainsKey("userid") && parser.Players.ContainsKey(entityID))
+            {
+                Console.WriteLine(typeof(T) + " projectile did not exist!");
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
+            }
+            else if (typeof(T).Equals(typeof(FireEventArgs)))
+            {
+                if (parser.InfernoOwners.ContainsKey(entityID))
+                {
+                    nade.ThrownBy = parser.InfernoOwners[entityID];
+                }
+            }
+            /*
+            else if (parser.Entities[(int)data["entityid"]] != null)
+            {
+                Console.WriteLine("Parser Entity exists " + parser.Entities[(int)data["entityid"]]);
+            }
+            */
+            else
+            {
+                Console.WriteLine("No thrower for " + typeof(T) + " :: " + entityID);
             }
 
             nade.Position = new Vector

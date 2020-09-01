@@ -13,7 +13,7 @@ namespace DemoInfo
 
         /*
         #if DEBUG
-        //why is this debug? Because it doesn't provie any additional information
+        //why is this debug? Because it doesn't provide any additional information
         //since we know this about the player
         //but this is *very* important for a unit-test.
 
