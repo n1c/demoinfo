@@ -118,12 +118,12 @@ namespace DemoInfo.DP
         public readonly int Index;
         public FlattenedPropEntry Entry { get; private set; }
 
-        public event EventHandler<PropertyUpdateEventArgs<int>> IntRecived;
+        public event EventHandler<PropertyUpdateEventArgs<int>> IntReceived;
         public event EventHandler<PropertyUpdateEventArgs<long>> Int64Received;
-        public event EventHandler<PropertyUpdateEventArgs<float>> FloatRecived;
-        public event EventHandler<PropertyUpdateEventArgs<Vector>> VectorRecived;
-        public event EventHandler<PropertyUpdateEventArgs<string>> StringRecived;
-        public event EventHandler<PropertyUpdateEventArgs<object[]>> ArrayRecived;
+        public event EventHandler<PropertyUpdateEventArgs<float>> FloatRecieved;
+        public event EventHandler<PropertyUpdateEventArgs<Vector>> VectorRecieved;
+        public event EventHandler<PropertyUpdateEventArgs<string>> StringRecieved;
+        public event EventHandler<PropertyUpdateEventArgs<object[]>> ArrayRecieved;
 
         public void Decode(IBitStream stream, Entity e)
         {
@@ -142,7 +142,7 @@ namespace DemoInfo.DP
                 case SendPropertyType.Int:
                     {
                         int val = PropDecoder.DecodeInt(Entry.Prop, stream);
-                        IntRecived?.Invoke(this, new PropertyUpdateEventArgs<int>(val, e, this));
+                        IntReceived?.Invoke(this, new PropertyUpdateEventArgs<int>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Int64:
@@ -154,31 +154,31 @@ namespace DemoInfo.DP
                 case SendPropertyType.Float:
                     {
                         float val = PropDecoder.DecodeFloat(Entry.Prop, stream);
-                        FloatRecived?.Invoke(this, new PropertyUpdateEventArgs<float>(val, e, this));
+                        FloatRecieved?.Invoke(this, new PropertyUpdateEventArgs<float>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Vector:
                     {
                         Vector val = PropDecoder.DecodeVector(Entry.Prop, stream);
-                        VectorRecived?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
+                        VectorRecieved?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
                     }
                     break;
                 case SendPropertyType.Array:
                     {
                         object[] val = PropDecoder.DecodeArray(Entry, stream);
-                        ArrayRecived?.Invoke(this, new PropertyUpdateEventArgs<object[]>(val, e, this));
+                        ArrayRecieved?.Invoke(this, new PropertyUpdateEventArgs<object[]>(val, e, this));
                     }
                     break;
                 case SendPropertyType.String:
                     {
                         string val = PropDecoder.DecodeString(Entry.Prop, stream);
-                        StringRecived?.Invoke(this, new PropertyUpdateEventArgs<string>(val, e, this));
+                        StringRecieved?.Invoke(this, new PropertyUpdateEventArgs<string>(val, e, this));
                     }
                     break;
                 case SendPropertyType.VectorXY:
                     {
                         Vector val = PropDecoder.DecodeVectorXY(Entry.Prop, stream);
-                        VectorRecived?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
+                        VectorRecieved?.Invoke(this, new PropertyUpdateEventArgs<Vector>(val, e, this));
                     }
                     break;
                 default:
@@ -194,12 +194,12 @@ namespace DemoInfo.DP
 
         public void Destroy()
         {
-            IntRecived = null;
+            IntReceived = null;
             Int64Received = null;
-            FloatRecived = null;
-            ArrayRecived = null;
-            StringRecived = null;
-            VectorRecived = null;
+            FloatRecieved = null;
+            ArrayRecieved = null;
+            StringRecieved = null;
+            VectorRecieved = null;
         }
 
         public override string ToString()
@@ -210,7 +210,7 @@ namespace DemoInfo.DP
         [Conditional("DEBUG")]
         public void CheckBindings(Entity e)
         {
-            if (IntRecived != null && Entry.Prop.Type != SendPropertyType.Int)
+            if (IntReceived != null && Entry.Prop.Type != SendPropertyType.Int)
             {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
@@ -228,7 +228,7 @@ namespace DemoInfo.DP
                         SendPropertyType.Int64));
             }
 
-            if (FloatRecived != null && Entry.Prop.Type != SendPropertyType.Float)
+            if (FloatRecieved != null && Entry.Prop.Type != SendPropertyType.Float)
             {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
@@ -237,7 +237,7 @@ namespace DemoInfo.DP
                         SendPropertyType.Float));
             }
 
-            if (StringRecived != null && Entry.Prop.Type != SendPropertyType.String)
+            if (StringRecieved != null && Entry.Prop.Type != SendPropertyType.String)
             {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
@@ -246,7 +246,7 @@ namespace DemoInfo.DP
                         SendPropertyType.String));
             }
 
-            if (ArrayRecived != null && Entry.Prop.Type != SendPropertyType.Array)
+            if (ArrayRecieved != null && Entry.Prop.Type != SendPropertyType.Array)
             {
                 throw new InvalidOperationException(
                     string.Format("({0}).({1}) isn't an {2}",
@@ -255,7 +255,7 @@ namespace DemoInfo.DP
                         SendPropertyType.Array));
             }
 
-            if (VectorRecived != null
+            if (VectorRecieved != null
                 && Entry.Prop.Type != SendPropertyType.Vector
                 && Entry.Prop.Type != SendPropertyType.VectorXY)
             {
@@ -273,7 +273,7 @@ namespace DemoInfo.DP
             {
                 if (arg is RecordedPropertyUpdate<int> intReceived)
                 {
-                    entity.Props[intReceived.PropIndex].IntRecived?.Invoke(null, new PropertyUpdateEventArgs<int>(intReceived.Value, entity, entity.Props[intReceived.PropIndex]));
+                    entity.Props[intReceived.PropIndex].IntReceived?.Invoke(null, new PropertyUpdateEventArgs<int>(intReceived.Value, entity, entity.Props[intReceived.PropIndex]));
                 }
                 else if (arg is RecordedPropertyUpdate<long> int64Received)
                 {
@@ -281,19 +281,19 @@ namespace DemoInfo.DP
                 }
                 else if (arg is RecordedPropertyUpdate<float> floatReceived)
                 {
-                    entity.Props[floatReceived.PropIndex].FloatRecived?.Invoke(null, new PropertyUpdateEventArgs<float>(floatReceived.Value, entity, entity.Props[floatReceived.PropIndex]));
+                    entity.Props[floatReceived.PropIndex].FloatRecieved?.Invoke(null, new PropertyUpdateEventArgs<float>(floatReceived.Value, entity, entity.Props[floatReceived.PropIndex]));
                 }
                 else if (arg is RecordedPropertyUpdate<Vector> vectorReceived)
                 {
-                    entity.Props[vectorReceived.PropIndex].VectorRecived?.Invoke(null, new PropertyUpdateEventArgs<Vector>(vectorReceived.Value, entity, entity.Props[vectorReceived.PropIndex]));
+                    entity.Props[vectorReceived.PropIndex].VectorRecieved?.Invoke(null, new PropertyUpdateEventArgs<Vector>(vectorReceived.Value, entity, entity.Props[vectorReceived.PropIndex]));
                 }
                 else if (arg is RecordedPropertyUpdate<string> stringReceived)
                 {
-                    entity.Props[stringReceived.PropIndex].StringRecived?.Invoke(null, new PropertyUpdateEventArgs<string>(stringReceived.Value, entity, entity.Props[stringReceived.PropIndex]));
+                    entity.Props[stringReceived.PropIndex].StringRecieved?.Invoke(null, new PropertyUpdateEventArgs<string>(stringReceived.Value, entity, entity.Props[stringReceived.PropIndex]));
                 }
                 else if (arg is RecordedPropertyUpdate<object[]> arrayReceived)
                 {
-                    entity.Props[arrayReceived.PropIndex].ArrayRecived?.Invoke(null, new PropertyUpdateEventArgs<object[]>(arrayReceived.Value, entity, entity.Props[arrayReceived.PropIndex]));
+                    entity.Props[arrayReceived.PropIndex].ArrayRecieved?.Invoke(null, new PropertyUpdateEventArgs<object[]>(arrayReceived.Value, entity, entity.Props[arrayReceived.PropIndex]));
                 }
                 else
                 {

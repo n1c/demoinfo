@@ -690,115 +690,114 @@ namespace DemoInfo
 
         private void HandleTeamScores()
         {
-            SendTableParser.FindByName("CCSTeam")
-                .OnNewEntity += (object sender, EntityCreatedEventArgs e) =>
+            SendTableParser.FindByName("CCSTeam").OnNewEntity += (object sender, EntityCreatedEventArgs e) =>
+            {
+                string team = null;
+                string teamName = null;
+                string teamFlag = null;
+                int teamID = -1;
+                int score = 0;
+
+                e.Entity.FindProperty("m_scoreTotal").IntReceived += (_, update) =>
                 {
-                    string team = null;
-                    string teamName = null;
-                    string teamFlag = null;
-                    int teamID = -1;
-                    int score = 0;
+                    score = update.Value;
+                };
 
-                    e.Entity.FindProperty("m_scoreTotal").IntRecived += (_, update) =>
+                e.Entity.FindProperty("m_iTeamNum").IntReceived += (_, update) =>
+                {
+                    teamID = update.Value;
+
+                    if (team == "CT")
                     {
-                        score = update.Value;
-                    };
+                        ctID = teamID;
+                        CTScore = score;
+                        foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                        {
+                            p.Team = Team.CounterTerrorist;
+                        }
+                    }
 
-                    e.Entity.FindProperty("m_iTeamNum").IntRecived += (_, update) =>
+                    if (team == "TERRORIST")
                     {
-                        teamID = update.Value;
+                        tID = teamID;
+                        TScore = score;
+                        foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
+                        {
+                            p.Team = Team.Terrorist;
+                        }
+                    }
+                };
 
-                        if (team == "CT")
+                e.Entity.FindProperty("m_szTeamname").StringRecieved += (_, recievedTeamName) =>
+                {
+                    team = recievedTeamName.Value;
+
+                    //We got the name. Lets bind the updates accordingly!
+                    if (recievedTeamName.Value == "CT")
+                    {
+                        CTScore = score;
+                        CTClanName = teamName;
+                        e.Entity.FindProperty("m_scoreTotal").IntReceived += (__, update) =>
+                        {
+                            CTScore = update.Value;
+                        };
+
+                        if (teamID != -1)
                         {
                             ctID = teamID;
-                            CTScore = score;
                             foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                             {
                                 p.Team = Team.CounterTerrorist;
                             }
                         }
+                    }
+                    else if (recievedTeamName.Value == "TERRORIST")
+                    {
+                        TScore = score;
+                        TClanName = teamName;
+                        e.Entity.FindProperty("m_scoreTotal").IntReceived += (__, update) =>
+                        {
+                            TScore = update.Value;
+                        };
 
-                        if (team == "TERRORIST")
+                        if (teamID != -1)
                         {
                             tID = teamID;
-                            TScore = score;
                             foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
                             {
                                 p.Team = Team.Terrorist;
                             }
                         }
-                    };
-
-                    e.Entity.FindProperty("m_szTeamname").StringRecived += (_, recivedTeamName) =>
-                    {
-                        team = recivedTeamName.Value;
-
-                        //We got the name. Lets bind the updates accordingly!
-                        if (recivedTeamName.Value == "CT")
-                        {
-                            CTScore = score;
-                            CTClanName = teamName;
-                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (__, update) =>
-                            {
-                                CTScore = update.Value;
-                            };
-
-                            if (teamID != -1)
-                            {
-                                ctID = teamID;
-                                foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
-                                {
-                                    p.Team = Team.CounterTerrorist;
-                                }
-                            }
-                        }
-                        else if (recivedTeamName.Value == "TERRORIST")
-                        {
-                            TScore = score;
-                            TClanName = teamName;
-                            e.Entity.FindProperty("m_scoreTotal").IntRecived += (__, update) =>
-                            {
-                                TScore = update.Value;
-                            };
-
-                            if (teamID != -1)
-                            {
-                                tID = teamID;
-                                foreach (Player p in PlayerInformations.Where(a => a != null && a.TeamID == teamID))
-                                {
-                                    p.Team = Team.Terrorist;
-                                }
-                            }
-                        }
-                    };
-
-                    e.Entity.FindProperty("m_szTeamFlagImage").StringRecived += (_, recivedTeamFlag) =>
-                    {
-                        teamFlag = recivedTeamFlag.Value;
-
-                        if (team == "CT")
-                        {
-                            CTFlag = teamFlag;
-                        }
-                        else if (team == "TERRORIST")
-                        {
-                            TFlag = teamFlag;
-                        }
-                    };
-
-                    e.Entity.FindProperty("m_szClanTeamname").StringRecived += (_, recivedClanName) =>
-                    {
-                        teamName = recivedClanName.Value;
-                        if (team == "CT")
-                        {
-                            CTClanName = recivedClanName.Value;
-                        }
-                        else if (team == "TERRORIST")
-                        {
-                            TClanName = recivedClanName.Value;
-                        }
-                    };
+                    }
                 };
+
+                e.Entity.FindProperty("m_szTeamFlagImage").StringRecieved += (_, recievedTeamFlag) =>
+                {
+                    teamFlag = recievedTeamFlag.Value;
+
+                    if (team == "CT")
+                    {
+                        CTFlag = teamFlag;
+                    }
+                    else if (team == "TERRORIST")
+                    {
+                        TFlag = teamFlag;
+                    }
+                };
+
+                e.Entity.FindProperty("m_szClanTeamname").StringRecieved += (_, recievedClanName) =>
+                {
+                    teamName = recievedClanName.Value;
+                    if (team == "CT")
+                    {
+                        CTClanName = recievedClanName.Value;
+                    }
+                    else if (team == "TERRORIST")
+                    {
+                        TClanName = recievedClanName.Value;
+                    }
+                };
+            };
         }
 
         private void HandlePlayers()
@@ -813,54 +812,54 @@ namespace DemoInfo
                     int iForTheMethod = i;
                     string iString = i.ToString().PadLeft(3, '0');
 
-                    playerResources.Entity.FindProperty("m_szClan." + iString).StringRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_szClan." + iString).StringRecieved += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Clantag = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iPing." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iPing." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Ping = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iScore." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iScore." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Score = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iKills." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iKills." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Kills = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iDeaths." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iDeaths." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Deaths = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iAssists." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iAssists." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].Assists = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iMVPs." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iMVPs." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].MVPs = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iTotalCashSpent." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iTotalCashSpent." + iString).IntReceived += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].TotalCashSpent = e.Value;
                     };
 
                     /*
                     #if DEBUG
-                    playerResources.Entity.FindProperty("m_iArmor." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iArmor." + iString).IntRecieved += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].ScoreboardArmor = e.Value;
                     };
 
-                    playerResources.Entity.FindProperty("m_iHealth." + iString).IntRecived += (sender, e) =>
+                    playerResources.Entity.FindProperty("m_iHealth." + iString).IntRecieved += (sender, e) =>
                     {
                         additionalInformations[iForTheMethod].ScoreboardHP = e.Value;
                     };
@@ -891,42 +890,42 @@ namespace DemoInfo
             p.Velocity = new Vector();
 
             //position update
-            playerEntity.FindProperty("cslocaldata.m_vecOrigin").VectorRecived += (sender, e) =>
+            playerEntity.FindProperty("cslocaldata.m_vecOrigin").VectorRecieved += (sender, e) =>
             {
                 p.Position.X = e.Value.X;
                 p.Position.Y = e.Value.Y;
             };
 
-            playerEntity.FindProperty("cslocaldata.m_vecOrigin[2]").FloatRecived += (sender, e) =>
+            playerEntity.FindProperty("cslocaldata.m_vecOrigin[2]").FloatRecieved += (sender, e) =>
             {
                 p.Position.Z = e.Value;
             };
 
             //team update
             //problem: Teams are networked after the players... How do we solve that?
-            playerEntity.FindProperty("m_iTeamNum").IntRecived += (sender, e) =>
+            playerEntity.FindProperty("m_iTeamNum").IntReceived += (sender, e) =>
             {
                 p.TeamID = e.Value;
                 p.Team = TeamFromTeamID(e.Value);
             };
 
-            playerEntity.FindProperty("m_iHealth").IntRecived += (sender, e) => p.HP = e.Value;
-            playerEntity.FindProperty("m_ArmorValue").IntRecived += (sender, e) => p.Armor = e.Value;
-            playerEntity.FindProperty("m_bHasDefuser").IntRecived += (sender, e) => p.HasDefuseKit = e.Value == 1;
-            playerEntity.FindProperty("m_bHasHelmet").IntRecived += (sender, e) => p.HasHelmet = e.Value == 1;
-            playerEntity.FindProperty("localdata.m_Local.m_bDucking").IntRecived += (sender, e) => p.IsDucking = e.Value == 1;
-            playerEntity.FindProperty("m_iAccount").IntRecived += (sender, e) => p.Money = e.Value;
-            playerEntity.FindProperty("m_angEyeAngles[0]").FloatRecived += (sender, e) => p.ViewDirectionX = e.Value;
-            playerEntity.FindProperty("m_angEyeAngles[1]").FloatRecived += (sender, e) => p.ViewDirectionY = e.Value;
-            playerEntity.FindProperty("m_flFlashDuration").FloatRecived += (sender, e) => p.FlashDuration = e.Value;
+            playerEntity.FindProperty("m_iHealth").IntReceived += (sender, e) => p.HP = e.Value;
+            playerEntity.FindProperty("m_ArmorValue").IntReceived += (sender, e) => p.Armor = e.Value;
+            playerEntity.FindProperty("m_bHasDefuser").IntReceived += (sender, e) => p.HasDefuseKit = e.Value == 1;
+            playerEntity.FindProperty("m_bHasHelmet").IntReceived += (sender, e) => p.HasHelmet = e.Value == 1;
+            playerEntity.FindProperty("localdata.m_Local.m_bDucking").IntReceived += (sender, e) => p.IsDucking = e.Value == 1;
+            playerEntity.FindProperty("m_iAccount").IntReceived += (sender, e) => p.Money = e.Value;
+            playerEntity.FindProperty("m_angEyeAngles[0]").FloatRecieved += (sender, e) => p.ViewDirectionX = e.Value;
+            playerEntity.FindProperty("m_angEyeAngles[1]").FloatRecieved += (sender, e) => p.ViewDirectionY = e.Value;
+            playerEntity.FindProperty("m_flFlashDuration").FloatRecieved += (sender, e) => p.FlashDuration = e.Value;
 
-            playerEntity.FindProperty("localdata.m_vecVelocity[0]").FloatRecived += (sender, e) => p.Velocity.X = e.Value;
-            playerEntity.FindProperty("localdata.m_vecVelocity[1]").FloatRecived += (sender, e) => p.Velocity.Y = e.Value;
-            playerEntity.FindProperty("localdata.m_vecVelocity[2]").FloatRecived += (sender, e) => p.Velocity.Z = e.Value;
+            playerEntity.FindProperty("localdata.m_vecVelocity[0]").FloatRecieved += (sender, e) => p.Velocity.X = e.Value;
+            playerEntity.FindProperty("localdata.m_vecVelocity[1]").FloatRecieved += (sender, e) => p.Velocity.Y = e.Value;
+            playerEntity.FindProperty("localdata.m_vecVelocity[2]").FloatRecieved += (sender, e) => p.Velocity.Z = e.Value;
 
-            playerEntity.FindProperty("m_unCurrentEquipmentValue").IntRecived += (sender, e) => p.CurrentEquipmentValue = e.Value;
-            playerEntity.FindProperty("m_unRoundStartEquipmentValue").IntRecived += (sender, e) => p.RoundStartEquipmentValue = e.Value;
-            playerEntity.FindProperty("m_unFreezetimeEndEquipmentValue").IntRecived += (sender, e) => p.FreezetimeEndEquipmentValue = e.Value;
+            playerEntity.FindProperty("m_unCurrentEquipmentValue").IntReceived += (sender, e) => p.CurrentEquipmentValue = e.Value;
+            playerEntity.FindProperty("m_unRoundStartEquipmentValue").IntReceived += (sender, e) => p.RoundStartEquipmentValue = e.Value;
+            playerEntity.FindProperty("m_unFreezetimeEndEquipmentValue").IntReceived += (sender, e) => p.FreezetimeEndEquipmentValue = e.Value;
 
             //Weapon attribution
             string weaponPrefix = "m_hMyWeapons.";
@@ -940,7 +939,7 @@ namespace DemoInfo
             for (int i = 0; i < MAXWEAPONS; i++)
             {
                 int iForTheMethod = i; // Otherwise i is passed as reference to the delegate.
-                playerEntity.FindProperty(weaponPrefix + i.ToString().PadLeft(3, '0')).IntRecived += (sender, e) =>
+                playerEntity.FindProperty(weaponPrefix + i.ToString().PadLeft(3, '0')).IntReceived += (sender, e) =>
                 {
                     int index = e.Value & INDEX_MASK;
 
@@ -968,13 +967,13 @@ namespace DemoInfo
                 };
             }
 
-            playerEntity.FindProperty("m_hActiveWeapon").IntRecived += (sender, e) => p.ActiveWeaponID = e.Value & INDEX_MASK;
+            playerEntity.FindProperty("m_hActiveWeapon").IntReceived += (sender, e) => p.ActiveWeaponID = e.Value & INDEX_MASK;
 
             for (int i = 0; i < 32; i++)
             {
                 int iForTheMethod = i;
 
-                playerEntity.FindProperty("m_iAmmo." + i.ToString().PadLeft(3, '0')).IntRecived += (sender, e) =>
+                playerEntity.FindProperty("m_iAmmo." + i.ToString().PadLeft(3, '0')).IntReceived += (sender, e) =>
                 {
                     p.AmmoLeft[iForTheMethod] = e.Value;
                 };
@@ -1051,19 +1050,19 @@ namespace DemoInfo
             equipment.Weapon = equipmentMapping[e.Class];
             equipment.AmmoInMagazine = -1;
 
-            e.Entity.FindProperty("m_iClip1").IntRecived += (_, ammoUpdate) =>
+            e.Entity.FindProperty("m_iClip1").IntReceived += (_, ammoUpdate) =>
             {
                 equipment.AmmoInMagazine = ammoUpdate.Value - 1;
             };
 
-            e.Entity.FindProperty("LocalWeaponData.m_iPrimaryAmmoType").IntRecived += (_, typeUpdate) =>
+            e.Entity.FindProperty("LocalWeaponData.m_iPrimaryAmmoType").IntReceived += (_, typeUpdate) =>
             {
                 equipment.AmmoType = typeUpdate.Value;
             };
 
             if (equipment.Weapon == EquipmentElement.P2000)
             {
-                e.Entity.FindProperty("m_nModelIndex").IntRecived += (sender2, e2) =>
+                e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_223"))
@@ -1083,7 +1082,7 @@ namespace DemoInfo
 
             if (equipment.Weapon == EquipmentElement.M4A4)
             {
-                e.Entity.FindProperty("m_nModelIndex").IntRecived += (sender2, e2) =>
+                e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_rif_m4a1_s"))
@@ -1104,7 +1103,7 @@ namespace DemoInfo
 
             if (equipment.Weapon == EquipmentElement.P250)
             {
-                e.Entity.FindProperty("m_nModelIndex").IntRecived += (sender2, e2) =>
+                e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_cz_75"))
@@ -1124,7 +1123,7 @@ namespace DemoInfo
 
             if (equipment.Weapon == EquipmentElement.Deagle)
             {
-                e.Entity.FindProperty("m_nModelIndex").IntRecived += (sender2, e2) =>
+                e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_pist_deagle"))
@@ -1144,7 +1143,7 @@ namespace DemoInfo
 
             if (equipment.Weapon == EquipmentElement.MP7)
             {
-                e.Entity.FindProperty("m_nModelIndex").IntRecived += (sender2, e2) =>
+                e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
                     equipment.OriginalString = modelprecache[e2.Value];
                     if (modelprecache[e2.Value].Contains("_smg_mp7"))
@@ -1183,13 +1182,13 @@ namespace DemoInfo
                 ServerClassName = entity.ServerClass.Name,
             };
 
-            entity.FindProperty("m_hThrower").IntRecived += (__, e) =>
+            entity.FindProperty("m_hThrower").IntReceived += (__, e) =>
             {
                 projectiles[e.Entity.ID].Owner = PlayerInformations[(e.Value & INDEX_MASK) - 1];
                 projectiles[e.Entity.ID].OwnerID = e.Value & INDEX_MASK;
             };
 
-            entity.FindProperty("m_vecVelocity").VectorRecived += (__, e) => projectiles[entity.ID].Position = e.Value;
+            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => projectiles[entity.ID].Position = e.Value;
 
             entity.EntityLeft += (sender, e) => projectiles[e.Entity.ID] = null;
         }
@@ -1199,11 +1198,11 @@ namespace DemoInfo
         {
             SendTableParser.FindByName("CCSPlayerResource").OnNewEntity += (s1, newResource) =>
             {
-                newResource.Entity.FindProperty("m_bombsiteCenterA").VectorRecived += (s2, center) =>
+                newResource.Entity.FindProperty("m_bombsiteCenterA").VectorRecieved += (s2, center) =>
                 {
                     bombsiteACenter = center.Value;
                 };
-                newResource.Entity.FindProperty("m_bombsiteCenterB").VectorRecived += (s3, center) =>
+                newResource.Entity.FindProperty("m_bombsiteCenterB").VectorRecieved += (s3, center) =>
                 {
                     bombsiteBCenter = center.Value;
                 };
@@ -1214,12 +1213,12 @@ namespace DemoInfo
                 BoundingBoxInformation trigger = new BoundingBoxInformation(newResource.Entity.ID);
                 triggers.Add(trigger);
 
-                newResource.Entity.FindProperty("m_Collision.m_vecMins").VectorRecived += (s2, vector) =>
+                newResource.Entity.FindProperty("m_Collision.m_vecMins").VectorRecieved += (s2, vector) =>
                 {
                     trigger.Min = vector.Value;
                 };
 
-                newResource.Entity.FindProperty("m_Collision.m_vecMaxs").VectorRecived += (s3, vector) =>
+                newResource.Entity.FindProperty("m_Collision.m_vecMaxs").VectorRecieved += (s3, vector) =>
                 {
                     trigger.Max = vector.Value;
                 };
@@ -1233,7 +1232,7 @@ namespace DemoInfo
 
             inferno.OnNewEntity += (s, infEntity) =>
             {
-                infEntity.Entity.FindProperty("m_hOwnerEntity").IntRecived += (_, handleID) =>
+                infEntity.Entity.FindProperty("m_hOwnerEntity").IntReceived += (_, handleID) =>
                 {
                     int playerEntityID = handleID.Value & INDEX_MASK;
                     if (playerEntityID < PlayerInformations.Length

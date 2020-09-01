@@ -125,23 +125,23 @@ namespace DemoInfo.DP.Handler
                     switch (prop.Entry.Prop.Type)
                     {
                         case SendPropertyType.Array:
-                            prop.ArrayRecived += HandleArrayRecived;
+                            prop.ArrayRecieved += HandleArrayRecieved;
                             break;
                         case SendPropertyType.Float:
-                            prop.FloatRecived += HandleFloatRecived;
+                            prop.FloatRecieved += HandleFloatRecieved;
                             break;
                         case SendPropertyType.Int:
-                            prop.IntRecived += HandleIntRecived;
+                            prop.IntReceived += HandleIntRecieved;
                             break;
                         case SendPropertyType.Int64:
                             prop.Int64Received += HandleInt64Received;
                             break;
                         case SendPropertyType.String:
-                            prop.StringRecived += HandleStringRecived;
+                            prop.StringRecieved += HandleStringRecieved;
                             break;
                         case SendPropertyType.Vector:
                         case SendPropertyType.VectorXY:
-                            prop.VectorRecived += HandleVectorRecived;
+                            prop.VectorRecieved += HandleVectorRecieved;
                             break;
                         default:
                             throw new NotImplementedException();
@@ -149,12 +149,12 @@ namespace DemoInfo.DP.Handler
                 }
             }
 
-            private void HandleVectorRecived(object sender, PropertyUpdateEventArgs<Vector> e) { Capture.Add(e.Record()); }
-            private void HandleStringRecived(object sender, PropertyUpdateEventArgs<string> e) { Capture.Add(e.Record()); }
-            private void HandleIntRecived(object sender, PropertyUpdateEventArgs<int> e) { Capture.Add(e.Record()); }
+            private void HandleVectorRecieved(object sender, PropertyUpdateEventArgs<Vector> e) { Capture.Add(e.Record()); }
+            private void HandleStringRecieved(object sender, PropertyUpdateEventArgs<string> e) { Capture.Add(e.Record()); }
+            private void HandleIntRecieved(object sender, PropertyUpdateEventArgs<int> e) { Capture.Add(e.Record()); }
             private void HandleInt64Received(object sender, PropertyUpdateEventArgs<long> e) { Capture.Add(e.Record()); }
-            private void HandleFloatRecived(object sender, PropertyUpdateEventArgs<float> e) { Capture.Add(e.Record()); }
-            private void HandleArrayRecived(object sender, PropertyUpdateEventArgs<object[]> e) { Capture.Add(e.Record()); }
+            private void HandleFloatRecieved(object sender, PropertyUpdateEventArgs<float> e) { Capture.Add(e.Record()); }
+            private void HandleArrayRecieved(object sender, PropertyUpdateEventArgs<object[]> e) { Capture.Add(e.Record()); }
 
             public void Dispose()
             {
@@ -163,23 +163,23 @@ namespace DemoInfo.DP.Handler
                     switch (prop.Entry.Prop.Type)
                     {
                         case SendPropertyType.Array:
-                            prop.ArrayRecived -= HandleArrayRecived;
+                            prop.ArrayRecieved -= HandleArrayRecieved;
                             break;
                         case SendPropertyType.Float:
-                            prop.FloatRecived -= HandleFloatRecived;
+                            prop.FloatRecieved -= HandleFloatRecieved;
                             break;
                         case SendPropertyType.Int:
-                            prop.IntRecived -= HandleIntRecived;
+                            prop.IntReceived -= HandleIntRecieved;
                             break;
                         case SendPropertyType.Int64:
                             prop.Int64Received -= HandleInt64Received;
                             break;
                         case SendPropertyType.String:
-                            prop.StringRecived -= HandleStringRecived;
+                            prop.StringRecieved -= HandleStringRecieved;
                             break;
                         case SendPropertyType.Vector:
                         case SendPropertyType.VectorXY:
-                            prop.VectorRecived -= HandleVectorRecived;
+                            prop.VectorRecieved -= HandleVectorRecieved;
                             break;
                         default:
                             throw new NotImplementedException();
