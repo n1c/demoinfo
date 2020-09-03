@@ -503,7 +503,7 @@ namespace DemoInfo
                 throw new InvalidDataException("Invalid Demo-Game");
             }
 
-            if (Header.Protocol != 4)
+            if (Header.DemoProtocol != 4)
             {
                 throw new InvalidDataException("Invalid Demo-Protocol");
             }

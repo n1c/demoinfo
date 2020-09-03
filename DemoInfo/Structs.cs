@@ -6,14 +6,14 @@ namespace DemoInfo
     /// <summary>
     /// A Demo header.
     /// </summary>
+    // https://developer.valvesoftware.com/wiki/DEM_Format
     public class DemoHeader
     {
         private const int MAX_OSPATH = 260;
 
         public string Filestamp { get; private set; }       // Should be HL2DEMO
-        public int Protocol { get; private set; }       // Should be DEMO_PROTOCOL (4)
-
-        public int NetworkProtocol { get; private set; }  // Should be PROTOCOL_VERSION
+        public int DemoProtocol { get; private set; }       //
+        public int NetworkProtocol { get; private set; }  //
         public string ServerName { get; private set; }    // Name of server
         public string ClientName { get; private set; }    // Name of client who recorded the game
         public string MapName { get; private set; }	      // Name of map
@@ -28,7 +28,7 @@ namespace DemoInfo
             return new DemoHeader()
             {
                 Filestamp = reader.ReadCString(8),
-                Protocol = reader.ReadSignedInt(32),
+                DemoProtocol = reader.ReadSignedInt(32),
                 NetworkProtocol = reader.ReadSignedInt(32),
                 ServerName = reader.ReadCString(MAX_OSPATH),
 
