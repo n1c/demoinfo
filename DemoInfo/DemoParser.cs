@@ -1184,8 +1184,14 @@ namespace DemoInfo
 
             entity.FindProperty("m_hThrower").IntReceived += (__, e) =>
             {
-                projectiles[e.Entity.ID].Owner = PlayerInformations[(e.Value & INDEX_MASK) - 1];
-                projectiles[e.Entity.ID].OwnerID = e.Value & INDEX_MASK;
+                int ownerID = (e.Value & INDEX_MASK) - 1;
+                if (ownerID >= PlayerInformations.Length)
+                {
+                    return;
+                }
+
+                projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
+                projectiles[e.Entity.ID].OwnerID = ownerID;
             };
 
             entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => projectiles[entity.ID].Position = e.Value;
