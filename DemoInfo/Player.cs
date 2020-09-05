@@ -109,13 +109,5 @@ namespace DemoInfo
 
             return me;
         }
-
-    }
-
-    public enum Team
-    {
-        Spectate = 1,
-        Terrorist = 2,
-        CounterTerrorist = 3,
     }
 }

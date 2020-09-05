@@ -126,7 +126,6 @@ namespace DemoInfo
         }
     }
 
-
     /// <summary>
     /// A split.
     /// </summary>
@@ -180,11 +179,10 @@ namespace DemoInfo
     }
 
     /// <summary>
-    /// A playerinfo, based on playerinfo_t by Volvo.
+    /// A playerinfo, based on Valve's playerinfo_t.
     /// </summary>
     public class PlayerInfo
     {
-
         /// version for future compatibility
         public long Version { get; set; }
 
@@ -279,159 +277,4 @@ namespace DemoInfo
                 point.Z >= Min.Z && point.Z <= Max.Z;
         }
     }
-
-    /// <summary>
-    /// The demo-commands as given by Valve.
-    /// </summary>
-    internal enum DemoCommand
-    {
-        /// <summary>
-        /// it's a startup message, process as fast as possible
-        /// </summary>
-        Signon = 1,
-        /// <summary>
-        // it's a normal network packet that we stored off
-        /// </summary>
-        Packet,
-
-        /// <summary>
-        /// sync client clock to demo tick
-        /// </summary>
-        Synctick,
-
-        /// <summary>
-        /// Console Command
-        /// </summary>
-        ConsoleCommand,
-
-        /// <summary>
-        /// user input command
-        /// </summary>
-        UserCommand,
-
-        /// <summary>
-        ///  network data tables
-        /// </summary>
-        DataTables,
-
-        /// <summary>
-        /// end of time.
-        /// </summary>
-        Stop,
-
-        /// <summary>
-        /// a blob of binary data understood by a callback function
-        /// </summary>
-        CustomData,
-
-        StringTables,
-
-        /// <summary>
-        /// Last Command
-        /// </summary>
-        LastCommand = StringTables,
-
-        /// <summary>
-        /// First Command
-        /// </summary>
-        FirstCommand = Signon
-    };
-
-    public enum RoundEndReason
-    {
-        /// <summary>
-        /// Target Successfully Bombed!
-        /// </summary>
-        TargetBombed = 1,
-        /// <summary>
-        /// The VIP has escaped.
-        /// </summary>
-        VIPEscaped,
-        /// <summary>
-        /// VIP has been assassinated
-        /// </summary>
-        VIPKilled,
-        /// <summary>
-        /// The terrorists have escaped
-        /// </summary>
-        TerroristsEscaped,
-
-        /// <summary>
-        /// The CTs have prevented most of the terrorists from escaping!
-        /// </summary>
-        CTStoppedEscape,
-        /// <summary>
-        /// Escaping terrorists have all been neutralized
-        /// </summary>
-        TerroristsStopped,
-        /// <summary>
-        /// The bomb has been defused!
-        /// </summary>
-        BombDefused,
-        /// <summary>
-        /// Counter-Terrorists Win!
-        /// </summary>
-        CTWin,
-        /// <summary>
-        /// Terrorists Win!
-        /// </summary>
-        TerroristWin,
-        /// <summary>
-        /// Round Draw!
-        /// </summary>
-        Draw,
-        /// <summary>
-        /// All Hostages have been rescued
-        /// </summary>
-        HostagesRescued,
-        /// <summary>
-        /// Target has been saved!
-        /// </summary>
-        TargetSaved,
-        /// <summary>
-        /// Hostages have not been rescued!
-        /// </summary>
-        HostagesNotRescued,
-        /// <summary>
-        /// Terrorists have not escaped!
-        /// </summary>
-        TerroristsNotEscaped,
-        /// <summary>
-        /// VIP has not escaped!
-        /// </summary>
-        VIPNotEscaped,
-        /// <summary>
-        /// Game Commencing!
-        /// </summary>
-        GameStart,
-        /// <summary>
-        /// Terrorists Surrender
-        /// </summary>
-        TerroristsSurrender,
-        /// <summary>
-        /// CTs Surrender
-        /// </summary>
-        CTSurrender
-    };
-
-    public enum RoundMVPReason
-    {
-        MostEliminations = 1,
-        BombPlanted,
-        BombDefused
-    };
-
-    public enum Hitgroup
-    {
-        Generic = 0,
-        Head = 1,
-        Chest = 2,
-        Stomach = 3,
-        LeftArm = 4,
-        RightArm = 5,
-        LeftLeg = 6,
-        RightLeg = 7,
-        Gear = 10,
-    };
-
 }
