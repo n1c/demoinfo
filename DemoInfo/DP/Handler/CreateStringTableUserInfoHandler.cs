@@ -10,9 +10,9 @@ namespace DemoInfo.DP.Handler
         {
             if (table.Name == "modelprecache")
             {
-                while (parser.modelprecache.Count < table.MaxEntries)
+                while (parser.ModelPrecache.Count < table.MaxEntries)
                 {
-                    parser.modelprecache.Add(null);
+                    parser.ModelPrecache.Add(null);
                 }
             }
 
@@ -114,15 +114,15 @@ namespace DemoInfo.DP.Handler
                 {
                     int classid = int.Parse(entry); //wtf volvo?
 
-                    parser.instanceBaseline[classid] = userdata;
+                    parser.InstanceBaseline[classid] = userdata;
                 }
                 else if (table.Name == "modelprecache")
                 {
-                    parser.modelprecache[entryIndex] = entry;
+                    parser.ModelPrecache[entryIndex] = entry;
                 }
             }
 
-            parser.stringTables.Add(table);
+            parser.StringTables.Add(table);
         }
     }
 }

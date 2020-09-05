@@ -4,7 +4,7 @@
     {
         public static void Apply(UpdateStringTable update, IBitStream reader, DemoParser parser)
         {
-            CreateStringTable create = parser.stringTables[update.TableId];
+            CreateStringTable create = parser.StringTables[update.TableId];
             if (create.Name == "userinfo" || create.Name == "modelprecache" || create.Name == "instancebaseline")
             {
                 /*

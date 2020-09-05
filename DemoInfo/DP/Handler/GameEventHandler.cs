@@ -209,26 +209,26 @@ namespace DemoInfo.DP.Handler
             };
 
             int site = (int)data["site"];
-            if (site == parser.bombsiteAIndex)
+            if (site == parser.BombsiteAIndex)
             {
                 bombEventArgs.Site = 'A';
             }
-            else if (site == parser.bombsiteBIndex)
+            else if (site == parser.BombsiteBIndex)
             {
                 bombEventArgs.Site = 'B';
             }
             else
             {
                 BoundingBoxInformation relevantTrigger = parser.triggers.Single(a => a.Index == site);
-                if (relevantTrigger.Contains(parser.bombsiteACenter))
+                if (relevantTrigger.Contains(parser.BombsiteACenter))
                 {
                     bombEventArgs.Site = 'A';
-                    parser.bombsiteAIndex = site;
+                    parser.BombsiteAIndex = site;
                 }
                 else
                 {
                     bombEventArgs.Site = 'B';
-                    parser.bombsiteBIndex = site;
+                    parser.BombsiteBIndex = site;
                 }
             }
 
@@ -442,9 +442,9 @@ namespace DemoInfo.DP.Handler
             T nade = new T();
 
             int entityID = (int)data["entityid"];
-            if (parser.projectiles[entityID] != null)
+            if (parser.Projectiles[entityID] != null)
             {
-                Projectile nadeEntity = parser.projectiles[entityID];
+                Projectile nadeEntity = parser.Projectiles[entityID];
                 nade.ThrownBy = nadeEntity.Owner;
             }
             else if (data.ContainsKey("userid") && parser.Players.ContainsKey(entityID))

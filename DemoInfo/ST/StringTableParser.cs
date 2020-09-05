@@ -23,7 +23,7 @@ namespace DemoInfo.ST
 
             if (tableName == "modelprecache")
             {
-                parser.modelprecache.Clear();
+                parser.ModelPrecache.Clear();
             }
 
             for (int i = 0; i < numStrings; i++)
@@ -48,11 +48,11 @@ namespace DemoInfo.ST
                     else if (tableName == "instancebaseline")
                     {
                         int classid = int.Parse(stringName);
-                        parser.instanceBaseline[classid] = data;
+                        parser.InstanceBaseline[classid] = data;
                     }
                     else if (tableName == "modelprecache")
                     {
-                        parser.modelprecache.Add(stringName);
+                        parser.ModelPrecache.Add(stringName);
                     }
                 }
             }

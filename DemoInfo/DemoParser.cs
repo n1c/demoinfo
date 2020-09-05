@@ -266,169 +266,6 @@ namespace DemoInfo
         public IEnumerable<Player> PlayingParticipants => Players.Values.Where(a => a.Team != Team.Spectate);
 
         /// <summary>
-        /// The stream of the demo - all the information go here
-        /// </summary>
-        private readonly IBitStream BitStream;
-
-        /// <summary>
-        /// A parser for DataTables. This contains the ServerClasses and DataTables.
-        /// </summary>
-        internal DataTableParser SendTableParser = new DataTableParser();
-
-        /// <summary>
-        /// A parser for DEM_STRINGTABLES-Packets
-        /// </summary>
-        private readonly StringTableParser StringTables = new StringTableParser();
-
-        /// <summary>
-        /// This maps an ServerClass to an Equipment.
-        /// Note that this is wrong for the CZ,M4A1 and USP-S, there is an additional fix for those
-        /// </summary>
-        internal Dictionary<ServerClass, EquipmentElement> equipmentMapping = new Dictionary<ServerClass, EquipmentElement>();
-
-        internal Dictionary<int, Player> Players = new Dictionary<int, Player>();
-
-        /// <summary>
-        /// Containing info about players, accessible by the entity-id
-        /// </summary>
-        internal Player[] PlayerInformations = new Player[MAXPLAYERS];
-
-        /// <summary>
-        /// Contains information about the players, accessible by the userid.
-        /// </summary>
-        internal PlayerInfo[] RawPlayers = new PlayerInfo[MAXPLAYERS];
-
-        /// <summary>
-        /// All entities currently alive in the demo.
-        /// </summary>
-        internal Entity[] Entities = new Entity[MAX_ENTITIES]; //Max 2048 entities.
-
-        /// <summary>
-        /// The modelprecache. With this we can tell which model an entity has.
-        /// Useful for finding out whether a weapon is a P250 or a CZ
-        /// </summary>
-        internal List<string> modelprecache = new List<string>();
-
-        /// <summary>
-        /// The string tables sent by the server.
-        /// </summary>
-        internal List<CreateStringTable> stringTables = new List<CreateStringTable>();
-
-        /// <summary>
-        /// An map entity <-> weapon. Used to remember whether a weapon is a p250,
-        /// how much ammonition it has, etc.
-        /// </summary>
-        internal Equipment[] weapons = new Equipment[MAX_ENTITIES];
-
-        /// <summary>
-        /// The projectiles currently flying around. This is important since a Projectile has a m_hThrower, and this is cool for molotovs.
-        /// </summary>
-        internal Projectile[] projectiles = new Projectile[MAX_ENTITIES];
-
-        /// <summary>
-        /// The indicies of the bombsites - useful to find out
-        /// where the bomb is planted
-        /// </summary>
-        internal int bombsiteAIndex = -1, bombsiteBIndex = -1;
-        internal Vector bombsiteACenter, bombsiteBCenter;
-
-        /// <summary>
-        /// The ID of the CT-Team
-        /// </summary>
-        internal int ctID = -1;
-        /// <summary>
-        /// The ID of the terrorist team
-        /// </summary>
-        internal int tID = -1;
-
-        /// <summary>
-        /// The Rounds the Counter-Terrorists have won at this point.
-        /// </summary>
-        /// <value>The CT score.</value>
-        public int CTScore
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The Rounds the Terrorists have won at this point.
-        /// </summary>
-        /// <value>The T score.</value>
-        public int TScore
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The clan name of the Counter-Terrorists
-        /// </summary>
-        /// <value>The name of the CT clan.</value>
-        public string CTClanName
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The clan name of the Terrorists
-        /// </summary>
-        /// <value>The name of the T clan.</value>
-        public string TClanName
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The flag of the Counter-Terrorists
-        /// </summary>
-        /// <value>The flag of the CT clan.</value>
-        public string CTFlag
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The flag of the Terrorists
-        /// </summary>
-        /// <value>The flag of the T clan.</value>
-        public string TFlag
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// And GameEvent is just sent with ID |--> Value, but we need Name |--> Value.
-        /// Luckily these contain a map ID |--> Name.
-        /// </summary>
-        internal Dictionary<int, GameEventList.Descriptor> GEH_Descriptors = null;
-
-        /// <summary>
-        /// Holds inferno_startburn event args so they can be matched with player
-        /// </summary>
-        internal Queue<Tuple<int, FireEventArgs>> GEH_StartBurns = new Queue<Tuple<int, FireEventArgs>>();
-
-        // These could be Dictionary<int, RecordedPropertyUpdate[]>, but I was too lazy to
-        // define that class. Also: It doesn't matter anyways, we always have to cast.
-
-        /// <summary>
-        /// The preprocessed baselines, useful to create entities fast
-        /// </summary>
-        internal Dictionary<int, object[]> PreprocessedBaselines = new Dictionary<int, object[]>();
-
-        /// <summary>
-        /// The instance baselines.
-        /// When a new edict is created one would need to send all the information twice.
-        /// Since this is (was) expensive, valve sends an instancebaseline, which contains defaults
-        /// for all the properties.
-        /// </summary>
-        internal Dictionary<int, byte[]> instanceBaseline = new Dictionary<int, byte[]>();
-
-        /// <summary>
         /// The tickrate *of the demo* (16 for normal GOTV-demos)
         /// </summary>
         /// <value>The tick rate.</value>
@@ -466,10 +303,153 @@ namespace DemoInfo
         public float CurrentTime => CurrentTick * TickTime;
 
         /// <summary>
+        /// The Rounds the Counter-Terrorists have won at this point.
+        /// </summary>
+        /// <value>The CT score.</value>
+        public int CTScore { get; private set; }
+
+        /// <summary>
+        /// The Rounds the Terrorists have won at this point.
+        /// </summary>
+        /// <value>The T score.</value>
+        public int TScore { get; private set; }
+
+        /// <summary>
+        /// The clan name of the Counter-Terrorists
+        /// </summary>
+        /// <value>The name of the CT clan.</value>
+        public string CTClanName { get; private set; }
+
+        /// <summary>
+        /// The clan name of the Terrorists
+        /// </summary>
+        /// <value>The name of the T clan.</value>
+        public string TClanName { get; private set; }
+
+        /// <summary>
+        /// The flag of the Counter-Terrorists
+        /// </summary>
+        /// <value>The flag of the CT clan.</value>
+        public string CTFlag { get; private set; }
+
+        /// <summary>
+        /// The flag of the Terrorists
+        /// </summary>
+        /// <value>The flag of the T clan.</value>
+        public string TFlag { get; private set; }
+
+        /// <summary>
+        /// An map entity <-> weapon. Used to remember whether a weapon is a p250,
+        /// how much ammunition it has, etc.
+        /// </summary>
+        public Equipment[] Weapons = new Equipment[MAX_ENTITIES];
+
+        /// <summary>
+        /// The projectiles currently flying around. This is important since a Projectile has a m_hThrower, and this is cool for molotovs.
+        /// </summary>
+        public Projectile[] Projectiles = new Projectile[MAX_ENTITIES];
+
+        /// <summary>
+        /// A parser for DataTables. This contains the ServerClasses and DataTables.
+        /// </summary>
+        internal DataTableParser SendTableParser = new DataTableParser();
+
+        /// <summary>
+        /// List of Players updated each tick from RawPlayers & AdditionalInformation
+        /// </summary>
+        internal Dictionary<int, Player> Players = new Dictionary<int, Player>();
+
+        /// <summary>
+        /// All entities currently alive in the demo.
+        /// </summary>
+        internal Entity[] Entities = new Entity[MAX_ENTITIES]; //Max 2048 entities.
+
+        /// <summary>
+        /// The ModelPrecache. With this we can tell which model an entity has.
+        /// Useful for finding out whether a weapon is a P250 or a CZ
+        /// </summary>
+        internal List<string> ModelPrecache = new List<string>();
+
+        /// <summary>
+        /// The string tables sent by the server.
+        /// </summary>
+        internal List<CreateStringTable> StringTables = new List<CreateStringTable>();
+
+        /// <summary>
+        /// A parser for DEM_STRINGTABLES-Packets
+        /// </summary>
+        internal readonly StringTableParser StringTablesParser = new StringTableParser();
+
+        /// <summary>
+        /// The indicies of the bombsites - useful to find out
+        /// where the bomb is planted
+        /// </summary>
+        internal int BombsiteAIndex = -1;
+        internal int BombsiteBIndex = -1;
+
+        internal Vector BombsiteACenter;
+        internal Vector BombsiteBCenter;
+
+        /// <summary>
+        /// And GameEvent is just sent with ID |--> Value, but we need Name |--> Value.
+        /// Luckily these contain a map ID |--> Name.
+        /// </summary>
+        internal Dictionary<int, GameEventList.Descriptor> GEH_Descriptors = null;
+
+        /// <summary>
+        /// Holds inferno_startburn event args so they can be matched with player
+        /// </summary>
+        internal Queue<Tuple<int, FireEventArgs>> GEH_StartBurns = new Queue<Tuple<int, FireEventArgs>>();
+
+        /// <summary>
+        /// The preprocessed baselines, useful to create entities fast
+        /// </summary>
+        internal Dictionary<int, object[]> PreprocessedBaselines = new Dictionary<int, object[]>();
+
+        /// <summary>
+        /// The instance baselines.
+        /// When a new edict is created one would need to send all the information twice.
+        /// Since this is (was) expensive, valve sends an instancebaseline, which contains defaults
+        /// for all the properties.
+        /// </summary>
+        internal Dictionary<int, byte[]> InstanceBaseline = new Dictionary<int, byte[]>();
+
+        /// <summary>
+        /// Contains information about the players, accessible by the userid.
+        /// </summary>
+        internal PlayerInfo[] RawPlayers = new PlayerInfo[MAXPLAYERS];
+
+        /// <summary>
+        /// The stream of the demo - all the information go here
+        /// </summary>
+        private readonly IBitStream BitStream;
+
+        /// <summary>
+        /// Containing info about players, accessible by the entity-id
+        /// </summary>
+        private Player[] PlayerInformations = new Player[MAXPLAYERS];
+
+        /// <summary>
         /// This contains additional informations about each player, such as Kills, Deaths, etc.
         /// This is networked seperately from the player, so we need to cache it somewhere else.
         /// </summary>
         private AdditionalPlayerInformation[] additionalInformations = new AdditionalPlayerInformation[MAXPLAYERS];
+
+        /// <summary>
+        /// This maps an ServerClass to an Equipment.
+        /// Note that this is wrong for the CZ,M4A1 and USP-S, there is an additional fix for those
+        /// </summary>
+        private Dictionary<ServerClass, EquipmentElement> equipmentMapping = new Dictionary<ServerClass, EquipmentElement>();
+
+        /// <summary>
+        /// The ID of the CT-Team
+        /// </summary>
+        private int ctID = -1;
+
+        /// <summary>
+        /// The ID of the terrorist team
+        /// </summary>
+        private int tID = -1;
 
         /// <summary>
         /// Initializes a new DemoParser. Right point if you want to start analyzing demos.
@@ -638,7 +618,7 @@ namespace DemoInfo
                     break;
                 case DemoCommand.StringTables:
                     BitStream.BeginChunk(BitStream.ReadSignedInt(32) * 8);
-                    StringTables.ParsePacket(BitStream, this);
+                    StringTablesParser.ParsePacket(BitStream, this);
                     BitStream.EndChunk();
                     break;
                 case DemoCommand.UserCommand:
@@ -1019,7 +999,7 @@ namespace DemoInfo
 
         private void AttributeWeapon(int weaponEntityIndex, Player p)
         {
-            Equipment weapon = weapons[weaponEntityIndex];
+            Equipment weapon = Weapons[weaponEntityIndex];
             weapon.Owner = p;
             weapon.LastOwner = p;
             p.rawWeapons[weaponEntityIndex] = weapon;
@@ -1029,7 +1009,7 @@ namespace DemoInfo
         {
             for (int i = 0; i < MAX_ENTITIES; i++)
             {
-                weapons[i] = new Equipment();
+                Weapons[i] = new Equipment();
             }
 
             foreach (ServerClass s in SendTableParser.ServerClasses.Where(a => a.BaseClasses.Any(c => c.Name == "CWeaponCSBase")))
@@ -1042,10 +1022,10 @@ namespace DemoInfo
         {
             e.Entity.EntityLeft += (_, left) =>
             {
-                weapons[left.Entity.ID] = new Equipment();
+                Weapons[left.Entity.ID] = new Equipment();
             };
 
-            Equipment equipment = weapons[e.Entity.ID];
+            Equipment equipment = Weapons[e.Entity.ID];
             equipment.EntityID = e.Entity.ID;
             equipment.Weapon = equipmentMapping[e.Class];
             equipment.AmmoInMagazine = -1;
@@ -1064,12 +1044,12 @@ namespace DemoInfo
             {
                 e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
-                    equipment.OriginalString = modelprecache[e2.Value];
-                    if (modelprecache[e2.Value].Contains("_pist_223"))
+                    equipment.OriginalString = ModelPrecache[e2.Value];
+                    if (ModelPrecache[e2.Value].Contains("_pist_223"))
                     {
                         equipment.Weapon = EquipmentElement.USP;
                     }
-                    else if (modelprecache[e2.Value].Contains("_pist_hkp2000"))
+                    else if (ModelPrecache[e2.Value].Contains("_pist_hkp2000"))
                     {
                         equipment.Weapon = EquipmentElement.P2000;
                     }
@@ -1084,13 +1064,13 @@ namespace DemoInfo
             {
                 e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
-                    equipment.OriginalString = modelprecache[e2.Value];
-                    if (modelprecache[e2.Value].Contains("_rif_m4a1_s"))
+                    equipment.OriginalString = ModelPrecache[e2.Value];
+                    if (ModelPrecache[e2.Value].Contains("_rif_m4a1_s"))
                     {
                         equipment.Weapon = EquipmentElement.M4A1;
                     }
                     // if it's not an M4A1-S, check if it's an M4A4
-                    else if (modelprecache[e2.Value].Contains("_rif_m4a1"))
+                    else if (ModelPrecache[e2.Value].Contains("_rif_m4a1"))
                     {
                         equipment.Weapon = EquipmentElement.M4A4;
                     }
@@ -1105,12 +1085,12 @@ namespace DemoInfo
             {
                 e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
-                    equipment.OriginalString = modelprecache[e2.Value];
-                    if (modelprecache[e2.Value].Contains("_pist_cz_75"))
+                    equipment.OriginalString = ModelPrecache[e2.Value];
+                    if (ModelPrecache[e2.Value].Contains("_pist_cz_75"))
                     {
                         equipment.Weapon = EquipmentElement.CZ;
                     }
-                    else if (modelprecache[e2.Value].Contains("_pist_p250"))
+                    else if (ModelPrecache[e2.Value].Contains("_pist_p250"))
                     {
                         equipment.Weapon = EquipmentElement.P250;
                     }
@@ -1125,12 +1105,12 @@ namespace DemoInfo
             {
                 e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
-                    equipment.OriginalString = modelprecache[e2.Value];
-                    if (modelprecache[e2.Value].Contains("_pist_deagle"))
+                    equipment.OriginalString = ModelPrecache[e2.Value];
+                    if (ModelPrecache[e2.Value].Contains("_pist_deagle"))
                     {
                         equipment.Weapon = EquipmentElement.Deagle;
                     }
-                    else if (modelprecache[e2.Value].Contains("_pist_revolver"))
+                    else if (ModelPrecache[e2.Value].Contains("_pist_revolver"))
                     {
                         equipment.Weapon = EquipmentElement.Revolver;
                     }
@@ -1145,12 +1125,12 @@ namespace DemoInfo
             {
                 e.Entity.FindProperty("m_nModelIndex").IntReceived += (sender2, e2) =>
                 {
-                    equipment.OriginalString = modelprecache[e2.Value];
-                    if (modelprecache[e2.Value].Contains("_smg_mp7"))
+                    equipment.OriginalString = ModelPrecache[e2.Value];
+                    if (ModelPrecache[e2.Value].Contains("_smg_mp7"))
                     {
                         equipment.Weapon = EquipmentElement.MP7;
                     }
-                    else if (modelprecache[e2.Value].Contains("_smg_mp5sd"))
+                    else if (ModelPrecache[e2.Value].Contains("_smg_mp5sd"))
                     {
                         equipment.Weapon = EquipmentElement.MP5SD;
                     }
@@ -1177,7 +1157,7 @@ namespace DemoInfo
         {
             Entity entity = entityCreatedEvent.Entity;
 
-            projectiles[entity.ID] = new Projectile
+            Projectiles[entity.ID] = new Projectile
             {
                 ServerClassName = entity.ServerClass.Name,
             };
@@ -1190,13 +1170,13 @@ namespace DemoInfo
                     return;
                 }
 
-                projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
-                projectiles[e.Entity.ID].OwnerID = ownerID;
+                Projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
+                Projectiles[e.Entity.ID].OwnerID = ownerID;
             };
 
-            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => projectiles[entity.ID].Position = e.Value;
+            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[entity.ID].Position = e.Value;
 
-            entity.EntityLeft += (sender, e) => projectiles[e.Entity.ID] = null;
+            entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
         }
 
         internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();
@@ -1206,11 +1186,11 @@ namespace DemoInfo
             {
                 newResource.Entity.FindProperty("m_bombsiteCenterA").VectorRecieved += (s2, center) =>
                 {
-                    bombsiteACenter = center.Value;
+                    BombsiteACenter = center.Value;
                 };
                 newResource.Entity.FindProperty("m_bombsiteCenterB").VectorRecieved += (s3, center) =>
                 {
-                    bombsiteBCenter = center.Value;
+                    BombsiteBCenter = center.Value;
                 };
             };
 

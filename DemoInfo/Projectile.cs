@@ -2,7 +2,7 @@ using System;
 
 namespace DemoInfo
 {
-    internal class Projectile
+    public class Projectile
     {
         public string ServerClassName { get; set; }
         public Player Owner { get; set; }

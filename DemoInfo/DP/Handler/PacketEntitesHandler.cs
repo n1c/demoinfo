@@ -94,11 +94,11 @@ namespace DemoInfo.DP.Handler
             {
                 List<object> preprocessedBaseline = new List<object>();
 
-                if (parser.instanceBaseline.ContainsKey(serverClassID))
+                if (parser.InstanceBaseline.ContainsKey(serverClassID))
                 {
                     // @TODO: I don't understand this first using? Does `collector` get used?
                     using (PropertyCollector collector = new PropertyCollector(newEntity, preprocessedBaseline))
-                    using (IBitStream bitStream = BitStreamUtil.Create(parser.instanceBaseline[serverClassID]))
+                    using (IBitStream bitStream = BitStreamUtil.Create(parser.InstanceBaseline[serverClassID]))
                     {
                         newEntity.ApplyUpdate(bitStream);
                     }
