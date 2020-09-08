@@ -19,21 +19,19 @@ namespace DemoInfo.DP.Handler
             for (int i = 0; i < packetEntities.UpdatedEntries; i++)
             {
 
-                //First read which entity is updated
+                // First read which entity is updated
                 currentEntity += 1 + (int)reader.ReadUBitInt();
 
-                //Find out whether we should create, destroy or update it.
+                // Find out whether we should create, destroy or update it.
                 // Leave flag
                 if (!reader.ReadBit())
                 {
                     // enter flag
                     if (reader.ReadBit())
                     {
-                        //create it
+                        // create it
                         Entity e = ReadEnterPVS(reader, currentEntity, parser);
-
                         parser.Entities[currentEntity] = e;
-
                         e.ApplyUpdate(reader);
                     }
                     else
@@ -67,25 +65,23 @@ namespace DemoInfo.DP.Handler
         /// <returns>The new Entity.</returns>
         private static Entity ReadEnterPVS(IBitStream reader, int id, DemoParser parser)
         {
-            //What kind of entity?
+            // What kind of entity?
             int serverClassID = (int)reader.ReadInt(parser.SendTableParser.ClassBits);
 
-            //So find the correct server class
+            // So find the correct server class
             ServerClass entityClass = parser.SendTableParser.ServerClasses[serverClassID];
-
-            _ = reader.ReadInt(10); //Entity serial.
+            // Entity serial.
+            _ = reader.ReadInt(10);
 
             Entity newEntity = new Entity(id, entityClass);
 
-            //give people the chance to subscribe to events for this
+            // give people the chance to subscribe to events for this
             newEntity.ServerClass.AnnounceNewEntity(newEntity);
 
-            //And then parse the instancebaseline.
-            //basically you could call
-            //newEntity.ApplyUpdate(parser.instanceBaseline[entityClass];
-            //This code below is just faster, since it only parses stuff once
-            //which is faster.
-
+            // And then parse the instancebaseline.
+            // basically you could call
+            // newEntity.ApplyUpdate(parser.instanceBaseline[entityClass];
+            // This code below is just faster, since it only parses stuff once
             if (parser.PreprocessedBaselines.TryGetValue(serverClassID, out object[] fastBaseline))
             {
                 PropertyEntry.Emit(newEntity, fastBaseline);

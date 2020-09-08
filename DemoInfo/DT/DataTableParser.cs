@@ -71,7 +71,8 @@ namespace DemoInfo.DT
             SendTable table = DataTables[ServerClasses[serverClassIndex].DataTableID];
 
             CurrentExcludes.Clear();
-            CurrentBaseclasses = new List<ServerClass>(); //NOT .clear because we use *this* reference
+            // NOT .clear because we use *this* reference
+            CurrentBaseclasses = new List<ServerClass>();
 
             GatherExcludesAndBaseclasses(table, true);
 
@@ -174,12 +175,12 @@ namespace DemoInfo.DT
 
                     if (property.Flags.HasFlagFast(SendPropertyFlags.Collapsible))
                     {
-                        //we don't prefix Collapsible stuff, since it is just derived mostly
+                        // we don't prefix Collapsible stuff, since it is just derived mostly
                         GatherProps_IterateProps(subTable, ServerClassIndex, flattenedProps, prefix);
                     }
                     else
                     {
-                        //We do however prefix everything else
+                        // We do however prefix everything else
                         string nfix = prefix + ((property.Name.Length > 0) ? property.Name + "." : "");
                         GatherProps(subTable, ServerClassIndex, nfix);
                     }

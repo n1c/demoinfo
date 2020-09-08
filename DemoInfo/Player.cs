@@ -75,7 +75,7 @@ namespace DemoInfo
         {
             Player me = new Player
             {
-                EntityID = -1, //this should bot be copied
+                EntityID = -1, // this should not be copied
                 Entity = null,
                 Name = Name,
                 SteamID = SteamID,
@@ -94,7 +94,8 @@ namespace DemoInfo
 
             if (Position != null)
             {
-                me.Position = Position.Copy(); //Vector is a class, not a struct - thus we need to make it thread-safe.
+                // Vector is a class, not a struct so copy for thread-safety
+                me.Position = Position.Copy();
             }
 
             if (LastAlivePosition != null)

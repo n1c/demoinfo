@@ -362,7 +362,7 @@ namespace DemoInfo
         /// <summary>
         /// All entities currently alive in the demo.
         /// </summary>
-        internal Entity[] Entities = new Entity[MAX_ENTITIES]; //Max 2048 entities.
+        internal Entity[] Entities = new Entity[MAX_ENTITIES]; // Max 2048 entities.
 
         /// <summary>
         /// The ModelPrecache. With this we can tell which model an entity has.
@@ -642,7 +642,6 @@ namespace DemoInfo
         /// </summary>
         private void ParseDemoPacket()
         {
-            //Read a command-info. Contains no really useful information afaik.
             _ = CommandInfo.Parse(BitStream);
             _ = BitStream.ReadInt(32); // SeqNrIn
             _ = BitStream.ReadInt(32); // SeqNrOut
@@ -712,7 +711,6 @@ namespace DemoInfo
                 {
                     team = recievedTeamName.Value;
 
-                    //We got the name. Lets bind the updates accordingly!
                     if (recievedTeamName.Value == "CT")
                     {
                         CTScore = score;
@@ -788,7 +786,7 @@ namespace DemoInfo
             {
                 for (int i = 0; i < 64; i++)
                 {
-                    //Since this is passed as reference to the delegates
+                    // This is passed as reference to the delegates
                     int iForTheMethod = i;
                     string iString = i.ToString().PadLeft(3, '0');
 
@@ -869,7 +867,6 @@ namespace DemoInfo
             p.Position = new Vector();
             p.Velocity = new Vector();
 
-            //position update
             playerEntity.FindProperty("cslocaldata.m_vecOrigin").VectorRecieved += (sender, e) =>
             {
                 p.Position.X = e.Value.X;
@@ -881,8 +878,7 @@ namespace DemoInfo
                 p.Position.Z = e.Value;
             };
 
-            //team update
-            //problem: Teams are networked after the players... How do we solve that?
+            // Problem: Teams are networked after the players... How do we solve that?
             playerEntity.FindProperty("m_iTeamNum").IntReceived += (sender, e) =>
             {
                 p.TeamID = e.Value;
@@ -907,9 +903,8 @@ namespace DemoInfo
             playerEntity.FindProperty("m_unRoundStartEquipmentValue").IntReceived += (sender, e) => p.RoundStartEquipmentValue = e.Value;
             playerEntity.FindProperty("m_unFreezetimeEndEquipmentValue").IntReceived += (sender, e) => p.FreezetimeEndEquipmentValue = e.Value;
 
-            //Weapon attribution
+            // Weapon attribution
             string weaponPrefix = "m_hMyWeapons.";
-
             if (playerEntity.Props.All(a => a.Entry.PropertyName != "m_hMyWeapons.000"))
             {
                 weaponPrefix = "bcc_nonlocaldata.m_hMyWeapons.";
@@ -918,14 +913,16 @@ namespace DemoInfo
             int[] cache = new int[MAXWEAPONS];
             for (int i = 0; i < MAXWEAPONS; i++)
             {
-                int iForTheMethod = i; // Otherwise i is passed as reference to the delegate.
+                // i is passed as reference to the delegate.
+                int iForTheMethod = i;
                 playerEntity.FindProperty(weaponPrefix + i.ToString().PadLeft(3, '0')).IntReceived += (sender, e) =>
                 {
                     int index = e.Value & INDEX_MASK;
 
                     if (index != INDEX_MASK)
                     {
-                        if (cache[iForTheMethod] != 0) // Player already has a weapon in this slot.
+                        // Player already has a weapon in this slot.
+                        if (cache[iForTheMethod] != 0)
                         {
                             _ = p.rawWeapons.Remove(cache[iForTheMethod]);
                             cache[iForTheMethod] = 0;
@@ -968,7 +965,7 @@ namespace DemoInfo
 
                 if (sc.BaseClasses.Count > 6 && sc.BaseClasses[6].Name == "CWeaponCSBase")
                 {
-                    //It is a "weapon" (Gun, C4, ...)
+                    // It is a "weapon" (Gun, C4, ...)
                     if (sc.BaseClasses.Count > 7)
                     {
                         if (sc.BaseClasses[7].Name == "CWeaponCSBaseGun")

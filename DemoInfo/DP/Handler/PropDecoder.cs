@@ -118,7 +118,7 @@ namespace DemoInfo.DP.Handler
             {
                 bool isNegative = reader.ReadBit();
 
-                //v0v0v1v1 in original instead of margin.
+                // v0v0v1v1 in original instead of margin.
                 float absolute = (v.X * v.X) + (v.Y * v.Y);
                 v.Z = absolute < 1.0f ? (float)Math.Sqrt(1 - absolute) : 0f;
 

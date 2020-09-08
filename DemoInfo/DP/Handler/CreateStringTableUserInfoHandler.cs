@@ -112,8 +112,7 @@ namespace DemoInfo.DP.Handler
                 }
                 else if (table.Name == "instancebaseline")
                 {
-                    int classid = int.Parse(entry); //wtf volvo?
-
+                    int classid = int.Parse(entry);
                     parser.InstanceBaseline[classid] = userdata;
                 }
                 else if (table.Name == "modelprecache")

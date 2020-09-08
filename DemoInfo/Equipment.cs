@@ -192,8 +192,8 @@ namespace DemoInfo
                     case "mp5sd":
                         weapon = EquipmentElement.MP5SD;
                         break;
-                    case "scar17"://These crash the game when given via give weapon_[mp5navy|...], and cannot be purchased ingame.
-                    case "sg550"://yet the server-classes are networked, so I need to resolve them.
+                    case "scar17": // These crash the game when given via give weapon_[mp5navy|...], and cannot be purchased ingame.
+                    case "sg550": // yet the server-classes are networked, so I need to resolve them.
                     case "mp5navy":
                     case "p228":
                     case "scout":

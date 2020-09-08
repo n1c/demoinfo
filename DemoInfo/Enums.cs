@@ -11,7 +11,7 @@ namespace DemoInfo
     {
         Unknown = 0,
 
-        //Pistols
+        // Pistols
         P2000 = 1,
         Glock = 2,
         P250 = 3,
@@ -23,7 +23,7 @@ namespace DemoInfo
         USP = 9,
         Revolver = 10,
 
-        //SMGs
+        // SMGs
         MP7 = 101,
         MP9 = 102,
         Bizon = 103,
@@ -32,7 +32,7 @@ namespace DemoInfo
         P90 = 106,
         MP5SD = 107,
 
-        //Heavy
+        // Heavy
         SawedOff = 201,
         Nova = 202,
         Swag7 = 203,
@@ -40,7 +40,7 @@ namespace DemoInfo
         M249 = 205,
         Negev = 206,
 
-        //Rifle
+        // Rifle
         Gallil = 301,
         Famas = 302,
         AK47 = 303,
@@ -53,7 +53,7 @@ namespace DemoInfo
         Scar20 = 310,
         G3SG1 = 311,
 
-        //Equipment
+        // Equipment
         Zeus = 401,
         Kevlar = 402,
         Helmet = 403,
@@ -62,7 +62,7 @@ namespace DemoInfo
         DefuseKit = 406,
         World = 407,
 
-        //Grenades
+        // Grenades
         Decoy = 501,
         Molotov = 502,
         Incendiary = 503,

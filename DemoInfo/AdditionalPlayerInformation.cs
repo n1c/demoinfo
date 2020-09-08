@@ -10,26 +10,6 @@ namespace DemoInfo
         public int Ping { get; internal set; }
         public string Clantag { get; internal set; }
         public int TotalCashSpent { get; internal set; }
-
-        /*
-        #if DEBUG
-        //why is this debug? Because it doesn't provide any additional information
-        //since we know this about the player
-        //but this is *very* important for a unit-test.
-
-        /// <summary>
-        /// Should always match Player.HP
-        /// </summary>
-        /// <value>The scoreboard armor.</value>
-        public int ScoreboardHP { get; set; }
-
-        /// <summary>
-        /// Should always match Player.Armor
-        /// </summary>
-        /// <value>The scoreboard H.</value>
-        public int ScoreboardArmor { get; set; }
-        #endif
-        */
     }
 
 }

@@ -57,9 +57,9 @@ namespace DemoInfo.DP
                 }
                 else
                 {
-                    //You can use this flag to see what information the other packets contain,
-                    //if you want. Then you can look into the objects. Has some advnatages, and some disdavantages (mostly speed),
-                    //so we use our own lightning-fast parsing code.
+                    // You can use this flag to see what information the other packets contain,
+                    // if you want. Then you can look into the objects. Has some advantages, and some disdavantages (mostly speed),
+                    // so we use our own lightning-fast parsing code.
 #if SLOW_PROTOBUF
 					Type toParse = null;
 

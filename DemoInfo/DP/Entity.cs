@@ -41,21 +41,21 @@ namespace DemoInfo.DP
         /// <param name="reader">Reader.</param>
         public void ApplyUpdate(IBitStream reader)
         {
-            //First a list of the updated props is sent
-            //And then the props itself are sent.
+            // First a list of the updated props is sent
+            // And then the props itself are sent.
 
-            //Read the field-indicies in a "new" way?
+            // Read the field-indicies in a "new" way?
             bool newWay = reader.ReadBit();
             int index = -1;
             List<PropertyEntry> entries = new List<PropertyEntry>();
 
-            //No read them.
+            // Now read them.
             while ((index = ReadFieldIndex(reader, index, newWay)) != -1)
             {
                 entries.Add(Props[index]);
             }
 
-            //Now read the updated props
+            // Now read the updated props
             foreach (PropertyEntry prop in entries)
             {
                 prop.Decode(reader, this);
@@ -127,16 +127,16 @@ namespace DemoInfo.DP
 
         public void Decode(IBitStream stream, Entity e)
         {
-            //I found no better place for this, sorry.
-            //This checks, when in Debug-Mode
-            //whether you've bound to the right event
-            //Helps finding bugs, where you'd simply miss an update
+            // I found no better place for this, sorry.
+            // This checks, when in Debug-Mode
+            // whether you've bound to the right event
+            // Helps finding bugs, where you'd simply miss an update
             CheckBindings(e);
 
-            //So here you start decoding. If you really want
-            //to implement this yourself, GOOD LUCK.
-            //also, be warned: They have 11 ways to read floats.
-            //oh, btw: You may want to read the original Valve-code for this.
+            // So here you start decoding. If you really want
+            // to implement this yourself, GOOD LUCK.
+            // also, be warned: They have 11 ways to read floats.
+            // You may want to read the original Valve-code for this.
             switch (Entry.Prop.Type)
             {
                 case SendPropertyType.Int:

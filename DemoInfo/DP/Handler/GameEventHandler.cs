@@ -145,11 +145,11 @@ namespace DemoInfo.DP.Handler
                 case "player_team":
                     HandlePlayerTeam(rawEvent, parser, eventDescriptor);
                     break;
-                case "bomb_beginplant": //When the bomb is starting to get planted
-                case "bomb_abortplant": //When the bomb planter stops planting the bomb
-                case "bomb_planted": //When the bomb has been planted
-                case "bomb_defused": //When the bomb has been defused
-                case "bomb_exploded": //When the bomb has exploded
+                case "bomb_beginplant":
+                case "bomb_abortplant":
+                case "bomb_planted":
+                case "bomb_defused":
+                case "bomb_exploded":
                     HandleBomb(rawEvent, parser, eventDescriptor);
                     break;
                 case "bomb_begindefuse":
@@ -287,7 +287,7 @@ namespace DemoInfo.DP.Handler
                 Name = (string)data["name"],
                 GUID = (string)data["networkid"],
                 XUID = (string)data["networkid"] == "BOT" ? 0 : GetCommunityID((string)data["networkid"]),
-                //IsFakePlayer = (bool)data["bot"],
+                // IsFakePlayer = (bool)data["bot"],
             };
 
             int index = (int)data["index"];

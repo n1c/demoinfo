@@ -190,7 +190,7 @@ namespace DemoInfo
         public long XUID { get; set; }
 
         // scoreboard information
-        public string Name { get; set; } //MAX_PLAYER_NAME_LENGTH=128
+        public string Name { get; set; } // MAX_PLAYER_NAME_LENGTH=128
 
         // local server user ID, unique while server is running
         public int UserID { get; set; }
@@ -200,6 +200,7 @@ namespace DemoInfo
 
         // friends identification number
         public int FriendsID { get; set; }
+
         // friends name
         public string FriendsName { get; set; } //128
 
