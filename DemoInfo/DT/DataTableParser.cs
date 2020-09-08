@@ -214,7 +214,7 @@ namespace DemoInfo.DT
             return ServerClasses.Single(a => a.Name == className);
         }
 
-        private ServerClass FindByDTName(string dtName)
+        public ServerClass FindByDTName(string dtName)
         {
             return ServerClasses.Single(a => a.DTName == dtName);
         }

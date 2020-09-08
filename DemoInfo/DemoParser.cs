@@ -659,15 +659,15 @@ namespace DemoInfo
         /// </summary>
         private void BindEntites()
         {
-            HandleTeamScores();
-            HandleBombSites();
-            HandlePlayers();
-            HandleWeapons();
-            HandleProjectiles();
-            HandleInfernos();
+            BindTeamScores();
+            BindBombSites();
+            BindPlayers();
+            BindWeapons();
+            BindProjectiles();
+            BindInfernos();
         }
 
-        private void HandleTeamScores()
+        private void BindTeamScores()
         {
             SendTableParser.FindByName("CCSTeam").OnNewEntity += (object sender, EntityCreatedEventArgs e) =>
             {
@@ -778,7 +778,7 @@ namespace DemoInfo
             };
         }
 
-        private void HandlePlayers()
+        private void BindPlayers()
         {
             SendTableParser.FindByName("CCSPlayer").OnNewEntity += (object sender, EntityCreatedEventArgs e) => HandleNewPlayer(e.Entity);
 
@@ -845,6 +845,20 @@ namespace DemoInfo
                     */
                 }
             };
+
+            SendTableParser.FindByDTName("DT_CSPlayer").OnNewEntity += (object _, EntityCreatedEventArgs e) =>
+            {
+                e.Entity.FindProperty("m_bIsScoped").IntReceived += (__, value) =>
+                {
+                    // Assume if there's no existing PlayerInformation we can skip
+                    if (PlayerInformations[e.Entity.ID - 1] == null)
+                    {
+                        return;
+                    }
+
+                    PlayerInformations[e.Entity.ID - 1].IsScoped = value.Value == 1;
+                };
+            };
         }
 
         private void HandleNewPlayer(Entity playerEntity)
@@ -856,10 +870,13 @@ namespace DemoInfo
             }
             else
             {
-                p = new Player();
+                p = new Player
+                {
+                    SteamID = -1,
+                    Name = "unconnected",
+                };
+
                 PlayerInformations[playerEntity.ID - 1] = p;
-                p.SteamID = -1;
-                p.Name = "unconnected";
             }
 
             p.EntityID = playerEntity.ID;
@@ -1002,7 +1019,7 @@ namespace DemoInfo
             p.rawWeapons[weaponEntityIndex] = weapon;
         }
 
-        private void HandleWeapons()
+        private void BindWeapons()
         {
             for (int i = 0; i < MAX_ENTITIES; i++)
             {
@@ -1139,7 +1156,7 @@ namespace DemoInfo
             }
         }
 
-        private void HandleProjectiles()
+        private void BindProjectiles()
         {
             SendTableParser.FindByName("CBaseCSGrenadeProjectile").OnNewEntity += HandleNewProjectile;
             SendTableParser.FindByName("CDecoyProjectile").OnNewEntity += HandleNewProjectile;
@@ -1177,7 +1194,7 @@ namespace DemoInfo
         }
 
         internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();
-        private void HandleBombSites()
+        private void BindBombSites()
         {
             SendTableParser.FindByName("CCSPlayerResource").OnNewEntity += (s1, newResource) =>
             {
@@ -1209,7 +1226,7 @@ namespace DemoInfo
         }
 
         internal Dictionary<int, Player> InfernoOwners = new Dictionary<int, Player>();
-        private void HandleInfernos()
+        private void BindInfernos()
         {
             ServerClass inferno = SendTableParser.FindByName("CInferno");
 
