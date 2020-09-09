@@ -303,6 +303,12 @@ namespace DemoInfo
         public float CurrentTime => CurrentTick * TickTime;
 
         /// <summary>
+        /// The current round number.
+        /// </summary>
+        /// <value>The Current Round number.</value>
+        public int CurrentRound => CTScore + TScore + 1;
+
+        /// <summary>
         /// The Rounds the Counter-Terrorists have won at this point.
         /// </summary>
         /// <value>The CT score.</value>
