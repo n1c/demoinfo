@@ -62,7 +62,7 @@ namespace DemoInfo
 
         internal int[] AmmoLeft = new int[32];
 
-        public AdditionalPlayerInformation AdditionaInformations { get; internal set; }
+        public AdditionalPlayerInformation AdditionalInformations { get; internal set; }
 
         public Player()
         {

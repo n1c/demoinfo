@@ -546,7 +546,7 @@ namespace DemoInfo
                     Player p = Players[id];
                     p.Name = rawPlayer.Name;
                     p.SteamID = rawPlayer.XUID;
-                    p.AdditionaInformations = additionalInformations[p.EntityID];
+                    p.AdditionalInformations = additionalInformations[p.EntityID];
 
                     if (p.IsAlive)
                     {
@@ -829,20 +829,6 @@ namespace DemoInfo
                     {
                         additionalInformations[iForTheMethod].TotalCashSpent = e.Value;
                     };
-
-                    /*
-                    #if DEBUG
-                    playerResources.Entity.FindProperty("m_iArmor." + iString).IntRecieved += (sender, e) =>
-                    {
-                        additionalInformations[iForTheMethod].ScoreboardArmor = e.Value;
-                    };
-
-                    playerResources.Entity.FindProperty("m_iHealth." + iString).IntRecieved += (sender, e) =>
-                    {
-                        additionalInformations[iForTheMethod].ScoreboardHP = e.Value;
-                    };
-                    #endif
-                    */
                 }
             };
 
