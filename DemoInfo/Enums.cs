@@ -235,6 +235,4 @@ namespace DemoInfo
         RightLeg = 7,
         Gear = 10,
     };
-
-
 }

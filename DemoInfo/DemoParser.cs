@@ -386,6 +386,10 @@ namespace DemoInfo
         /// </summary>
         internal readonly StringTableParser StringTablesParser = new StringTableParser();
 
+        internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();
+
+        internal Dictionary<int, Player> InfernoOwners = new Dictionary<int, Player>();
+
         /// <summary>
         /// The indicies of the bombsites - useful to find out
         /// where the bomb is planted
@@ -1180,12 +1184,12 @@ namespace DemoInfo
                 Projectiles[e.Entity.ID].OwnerID = ownerID;
             };
 
-            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[entity.ID].Position = e.Value;
+            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[entity.ID].Velocity = e.Value;
+            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[entity.ID].Position = e.Value;
 
             entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
         }
 
-        internal List<BoundingBoxInformation> triggers = new List<BoundingBoxInformation>();
         private void BindBombSites()
         {
             SendTableParser.FindByName("CCSPlayerResource").OnNewEntity += (s1, newResource) =>
@@ -1217,7 +1221,6 @@ namespace DemoInfo
             };
         }
 
-        internal Dictionary<int, Player> InfernoOwners = new Dictionary<int, Player>();
         private void BindInfernos()
         {
             ServerClass inferno = SendTableParser.FindByName("CInferno");
