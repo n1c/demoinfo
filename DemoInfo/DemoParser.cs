@@ -10,12 +10,6 @@ using System.Threading.Tasks;
 
 namespace DemoInfo
 {
-    /*
-    #if DEBUG
-    #warning The DemoParser is very slow when compiled in Debug-Mode, since we use it as that: We perform many integrity checks during runtime.
-    #warning Build this in Relase-Mode for more performance if you're not working the internals of the parser. (If you are, create a pull request when you're done!)
-    #endif
-    */
     public class DemoParser : IDisposable
     {
         private const int MAX_EDICT_BITS = 11;

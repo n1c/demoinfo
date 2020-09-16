@@ -405,8 +405,6 @@ namespace DemoInfo.DP.Handler
                 fire.Weapon = new Equipment((string)data["weapon"]);
             }
 
-            // @TODO: Grenade throw event?
-
             parser.RaiseWeaponFired(fire);
         }
 
@@ -452,7 +450,7 @@ namespace DemoInfo.DP.Handler
             }
             else if (data.ContainsKey("userid") && parser.Players.ContainsKey(entityID))
             {
-                Console.WriteLine(typeof(T) + " projectile did not exist!");
+                // Console.WriteLine(typeof(T) + " projectile did not exist!");
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
             }
             else if (typeof(T).Equals(typeof(FireEventArgs)))
@@ -462,6 +460,7 @@ namespace DemoInfo.DP.Handler
                     nade.ThrownBy = parser.InfernoOwners[entityID];
                 }
             }
+            /*
             else if (parser.Entities[(int)data["entityid"]] != null)
             {
                 Console.WriteLine("Parser Entity exists " + parser.Entities[(int)data["entityid"]]);
@@ -470,6 +469,7 @@ namespace DemoInfo.DP.Handler
             {
                 Console.WriteLine("No thrower for " + typeof(T) + " :: " + entityID);
             }
+            */
 
             nade.Position = new Vector
             {
