@@ -51,6 +51,10 @@ namespace DemoInfo.DP
                 {
                     new NETTick().Parse(bitstream, demo);
                 }
+                else if (cmd == (int)NET_Messages.net_SetConVar)
+                {
+                    new SetConVar().Parse(bitstream, demo);
+                }
                 else if (cmd == (int)SVC_Messages.svc_UserMessage)
                 {
                     new UserMessage().Parse(bitstream, demo);

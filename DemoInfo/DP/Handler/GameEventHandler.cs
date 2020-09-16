@@ -255,12 +255,12 @@ namespace DemoInfo.DP.Handler
         private static void HandlePlayerDisconnect(GameEvent rawEvent, DemoParser parser, GameEventList.Descriptor eventDescriptor)
         {
             Dictionary<string, object> data = MapData(eventDescriptor, rawEvent);
-            PlayerDisconnectEventArgs disconnect = new PlayerDisconnectEventArgs
+
+            parser.RaisePlayerDisconnect(new PlayerDisconnectEventArgs
             {
                 Player = parser.PlayerFromPlayerID((int)data["userid"]),
-            };
-
-            parser.RaisePlayerDisconnect(disconnect);
+                Reason = (string)data["reason"],
+            });
 
             int toDelete = (int)data["userid"];
             for (int i = 0; i < parser.RawPlayers.Length; i++)
@@ -306,12 +306,16 @@ namespace DemoInfo.DP.Handler
                 HealthDamage = (int)data["dmg_health"],
                 ArmorDamage = (int)data["dmg_armor"],
                 Hitgroup = (Hitgroup)(int)data["hitgroup"],
-                Weapon = new Equipment((string)data["weapon"], "")
+                Weapon = new Equipment((string)data["weapon"]),
             };
 
-            if (hurt.Attacker != null && hurt.Weapon.Class != EquipmentClass.Grenade && hurt.Attacker.Weapons.Any())
+            if (hurt.Attacker != null && hurt.Attacker.ActiveWeapon != null)
             {
-                hurt.Weapon = hurt.Attacker.ActiveWeapon;
+                // In case of grenade attacks, attacker's active weapon is not his grenade at this state
+                if (hurt.Weapon == null || (hurt.Weapon != null && hurt.Weapon.Class != EquipmentClass.Grenade))
+                {
+                    hurt.Weapon = hurt.Attacker.ActiveWeapon;
+                }
             }
 
             parser.RaisePlayerHurt(hurt);
@@ -369,20 +373,14 @@ namespace DemoInfo.DP.Handler
                 kill.AssistedFlash = (bool)data["assistedflash"];
             }
 
-            if (kill.Killer != null
-                && kill.Weapon.Class != EquipmentClass.Grenade
-                && kill.Weapon.Weapon != EquipmentElement.Revolver
-                && kill.Weapon.Weapon != EquipmentElement.World
-                && kill.Killer.Weapons.Any()
-            )
+            if (kill.Killer != null && kill.Killer.ActiveWeapon != null)
             {
-                /*
-                #if DEBUG
-                if (kill.Weapon.Weapon != kill.Killer.ActiveWeapon.Weapon)
-                    throw new InvalidDataException();
-                #endif
-                */
-                kill.Weapon = kill.Killer.ActiveWeapon;
+                // In case of grenade kills, killer's active weapon is not his grenade at this state
+                if (kill.Weapon == null || (kill.Weapon != null && kill.Weapon.Class != EquipmentClass.Grenade))
+                {
+                    kill.Weapon = kill.Killer.ActiveWeapon;
+                    kill.Weapon.SkinID = (string)data["weapon_itemid"];
+                }
             }
 
             parser.RaisePlayerKilled(kill);
@@ -397,9 +395,14 @@ namespace DemoInfo.DP.Handler
                 Weapon = new Equipment((string)data["weapon"])
             };
 
-            if (fire.Shooter != null && fire.Shooter.ActiveWeapon != null && fire.Weapon.Class != EquipmentClass.Grenade)
+            if (fire.Shooter != null && fire.Shooter.ActiveWeapon != null)
             {
                 fire.Weapon = fire.Shooter.ActiveWeapon;
+            }
+            else
+            {
+                // Should not happen?
+                fire.Weapon = new Equipment((string)data["weapon"]);
             }
 
             // @TODO: Grenade throw event?
@@ -459,12 +462,10 @@ namespace DemoInfo.DP.Handler
                     nade.ThrownBy = parser.InfernoOwners[entityID];
                 }
             }
-            /*
             else if (parser.Entities[(int)data["entityid"]] != null)
             {
                 Console.WriteLine("Parser Entity exists " + parser.Entities[(int)data["entityid"]]);
             }
-            */
             else
             {
                 Console.WriteLine("No thrower for " + typeof(T) + " :: " + entityID);

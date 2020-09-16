@@ -239,6 +239,7 @@ namespace DemoInfo
     public class PlayerDisconnectEventArgs : EventArgs
     {
         public Player Player { get; set; }
+        public string Reason { get; set; }
     }
 
     /// <summary>
@@ -326,5 +327,124 @@ namespace DemoInfo
         /// Number of rank the player win / lost between the beggining and the end of the match
         /// </summary>
         public float RankChange { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a player leaves a buy zone
+    /// </summary>
+    public class PlayerLeftBuyZoneEventArgs : EventArgs
+    {
+        public Player Player { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a player's money changed
+    /// </summary>
+    public class PlayerMoneyChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Player that had money changes
+        /// </summary>
+        public Player Player { get; set; }
+
+        /// <summary>
+        /// Old account value
+        /// </summary>
+        public int OldAccount { get; set; }
+
+        /// <summary>
+        /// New account value
+        /// </summary>
+        public int NewAccount { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a player picked a weapon (buy or standard pick)
+    /// </summary>
+    public class PlayerPickWeaponEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who picked the weapon
+        /// </summary>
+        public Player Player { get; set; }
+
+        /// <summary>
+        /// Weapon picked
+        /// </summary>
+        public Equipment Weapon { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a player drops a weapon
+    /// </summary>
+    public class PlayerDropWeaponEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who dropped the weapon
+        /// </summary>
+        public Player Player { get; set; }
+
+        /// <summary>
+        /// Weapon dropped
+        /// </summary>
+        public Equipment Weapon { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a player buys an equipment
+    /// </summary>
+    public class PlayerBuyEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who bought the equipment
+        /// </summary>
+        public Player Player { get; set; }
+
+        /// <summary>
+        /// Equipment bought
+        /// </summary>
+        public Equipment Weapon { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a ConVar has changed
+    /// </summary>
+    public class ConVarChangeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// ConVar's name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// ConVar value
+        /// </summary>
+        public string Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public uint DictionaryValue { get; set; }
+    }
+
+    /// <summary>
+    /// Occurs when a team's score has changed
+    /// </summary>
+    public class TeamScoreChangeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Team which its score changed
+        /// </summary>
+        public Team Team { get; set; }
+
+        /// <summary>
+        /// Old score
+        /// </summary>
+        public int OldScore { get; set; }
+
+        /// <summary>
+        /// New Score
+        /// </summary>
+        public int NewScore { get; set; }
     }
 }
