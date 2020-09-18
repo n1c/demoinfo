@@ -1248,8 +1248,8 @@ namespace DemoInfo
                 Projectiles[e.Entity.ID].OwnerID = ownerID;
             };
 
-            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[entity.ID].Velocity = e.Value;
-            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[entity.ID].Position = e.Value;
+            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Velocity = e.Value;
+            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Position = e.Value;
 
             entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
         }
