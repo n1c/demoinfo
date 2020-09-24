@@ -1161,7 +1161,10 @@ namespace DemoInfo
                 Weapons[i] = new Equipment();
             }
 
-            foreach (ServerClass s in SendTableParser.ServerClasses.Where(a => a.BaseClasses.Any(c => c.Name == "CWeaponCSBase")))
+            IEnumerable<ServerClass> WeaponServerClasses = SendTableParser.ServerClasses
+                .Where(a => a.BaseClasses.Any(c => c.Name == "CWeaponCSBase"));
+
+            foreach (ServerClass s in WeaponServerClasses)
             {
                 s.OnNewEntity += HandleWeapon;
             }
@@ -1218,13 +1221,16 @@ namespace DemoInfo
 
         private void BindProjectiles()
         {
-            // SendTableParser.FindByName("CBaseCSGrenadeProjectile").OnNewEntity += HandleNewProjectile;
-            SendTableParser.FindByName("CDecoyProjectile").OnNewEntity += HandleNewProjectile;
-            SendTableParser.FindByName("CMolotovProjectile").OnNewEntity += HandleNewProjectile;
-            SendTableParser.FindByName("CSmokeGrenadeProjectile").OnNewEntity += HandleNewProjectile;
-            SendTableParser.FindByName("CSensorGrenadeProjectile").OnNewEntity += HandleNewProjectile;
-            // CBaseGrenade
-            // CSnowballProjectile
+            // Grenade that has been thrown by player.
+            IEnumerable<ServerClass> ProjectileServerClasses = SendTableParser.ServerClasses
+                .Where(a => a.BaseClasses.Any(c => c.Name == "CBaseGrenade"));
+
+            foreach (ServerClass s in ProjectileServerClasses)
+            {
+                s.OnNewEntity += HandleNewProjectile;
+            }
+
+            // "CBaseCSGrenade" // Grenades dropped by a dying player
         }
 
         private void HandleNewProjectile(object _, EntityCreatedEventArgs entityCreatedEvent)
@@ -1244,12 +1250,27 @@ namespace DemoInfo
                     return;
                 }
 
-                Projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
                 Projectiles[e.Entity.ID].OwnerID = ownerID;
+                Projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
             };
 
-            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Velocity = e.Value;
-            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Position = e.Value;
+            entity.FindProperty("m_hOwnerEntity").IntReceived += (__, e) =>
+            {
+                int ownerID = (e.Value & INDEX_MASK) - 1;
+                if (ownerID >= PlayerInformations.Length)
+                {
+                    return;
+                }
+
+                Projectiles[e.Entity.ID].OwnerID = ownerID;
+                Projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
+            };
+
+            entity.FindProperty("m_cellbits").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellBits = e.Value;
+            entity.FindProperty("m_cellX").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellX = e.Value;
+            entity.FindProperty("m_cellY").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellY = e.Value;
+            entity.FindProperty("m_cellZ").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellZ = e.Value;
+            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].VecOrigin = e.Value;
 
             entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
         }

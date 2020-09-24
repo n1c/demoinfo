@@ -448,9 +448,9 @@ namespace DemoInfo.DP.Handler
                 Projectile nadeEntity = parser.Projectiles[entityID];
                 nade.ThrownBy = nadeEntity.Owner;
             }
-            else if (data.ContainsKey("userid") && parser.Players.ContainsKey(entityID))
+            // Is this userid - 1?
+            else if (data.ContainsKey("userid") && parser.Players.ContainsKey((int)data["userid"]))
             {
-                // Console.WriteLine(typeof(T) + " projectile did not exist!");
                 nade.ThrownBy = parser.Players[(int)data["userid"]];
             }
             else if (typeof(T).Equals(typeof(FireEventArgs)))

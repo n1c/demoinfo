@@ -115,6 +115,7 @@ namespace DemoInfo.DT
                             start++;
                             break;
                         }
+
                         currentProp++;
                     }
 
@@ -175,7 +176,7 @@ namespace DemoInfo.DT
 
                     if (property.Flags.HasFlagFast(SendPropertyFlags.Collapsible))
                     {
-                        // we don't prefix Collapsible stuff, since it is just derived mostly
+                        // We don't prefix Collapsible stuff, since it is just derived mostly
                         GatherProps_IterateProps(subTable, ServerClassIndex, flattenedProps, prefix);
                     }
                     else
