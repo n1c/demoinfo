@@ -337,7 +337,7 @@ namespace DemoInfo
         /// The current round number.
         /// </summary>
         /// <value>The Current Round number.</value>
-        public int CurrentRound => CTScore + TScore + 1;
+        public int CurrentRound { get; internal set; } = 0;
 
         /// <summary>
         /// The Rounds the Counter-Terrorists have won at this point.
@@ -738,6 +738,7 @@ namespace DemoInfo
             BindWeapons();
             BindProjectiles();
             BindInfernos();
+            BindGameRules();
         }
 
         private void BindTeamScores()
@@ -1273,6 +1274,19 @@ namespace DemoInfo
             entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].VecOrigin = e.Value;
 
             entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
+        }
+
+        private void BindGameRules()
+        {
+            SendTableParser.FindByName("CCSGameRulesProxy").OnNewEntity += (_, entityCreatedEvent) =>
+            {
+                Entity entity = entityCreatedEvent.Entity;
+                entity.FindProperty("cs_gamerules_data.m_totalRoundsPlayed").IntReceived += (__, e) => CurrentRound = e.Value;
+
+                // entity.FindProperty('cs_gamerules_data.m_gamePhase')
+                // entity.FindProperty('cs_gamerules_data.m_bWarmupPeriod')
+                // entity.FindProperty('cs_gamerules_data.m_bHasMatchStarted')
+            };
         }
 
         private void BindBombSites()
