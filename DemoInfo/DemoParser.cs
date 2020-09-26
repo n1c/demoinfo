@@ -1267,11 +1267,12 @@ namespace DemoInfo
                 Projectiles[e.Entity.ID].Owner = PlayerInformations[ownerID];
             };
 
+            entity.FindProperty("m_vecVelocity").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Velocity = e.Value;
             entity.FindProperty("m_cellbits").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellBits = e.Value;
             entity.FindProperty("m_cellX").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellX = e.Value;
             entity.FindProperty("m_cellY").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellY = e.Value;
             entity.FindProperty("m_cellZ").IntReceived += (__, e) => Projectiles[e.Entity.ID].CellZ = e.Value;
-            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].VecOrigin = e.Value;
+            entity.FindProperty("m_vecOrigin").VectorRecieved += (__, e) => Projectiles[e.Entity.ID].Origin = e.Value;
 
             entity.EntityLeft += (sender, e) => Projectiles[e.Entity.ID] = null;
         }
