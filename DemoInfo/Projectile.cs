@@ -11,6 +11,7 @@ namespace DemoInfo
         public int OwnerID { get; set; }
 
         public int CellBits { get; set; }
+        public int CellWidth => 1 << CellBits;
         public int CellX { get; set; }
         public int CellY { get; set; }
         public int CellZ { get; set; }
@@ -18,10 +19,10 @@ namespace DemoInfo
         public Vector Origin { get; set; }
         public Vector Velocity { get; set; }
 
-        public Vector Position => new Vector(CellXOffset, CellYOffset, CellYOffset);
+        public Vector Position => new Vector(CellXOffset, CellYOffset, CellZOffset);
 
-        private float CellXOffset => (CellX * CellBits - MAX_COORD_INT) + Origin.X;
-        private float CellYOffset => (CellY * CellBits - MAX_COORD_INT) + Origin.Y;
-        private float CellZOffset => (CellZ * CellBits - MAX_COORD_INT) + Origin.Z;
+        private float CellXOffset => (CellX * CellWidth - MAX_COORD_INT) + Origin.X;
+        private float CellYOffset => (CellY * CellWidth - MAX_COORD_INT) + Origin.Y;
+        private float CellZOffset => (CellZ * CellWidth - MAX_COORD_INT) + Origin.Z;
     }
 }
